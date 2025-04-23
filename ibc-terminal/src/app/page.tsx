@@ -1,5 +1,8 @@
+'use client';
+
 import Terminal from '../components/Terminal';
 import { generateDeviceId, allocateWorld } from '../lib/deviceId';
+import { useEffect, useState } from 'react';
 
 export default function Home() {
   return (
@@ -14,10 +17,6 @@ export default function Home() {
 }
 
 // Client component to handle device ID generation
-'use client';
-
-import { useEffect, useState } from 'react';
-
 function ClientTerminal() {
   const [deviceId, setDeviceId] = useState<string>('');
   const [worldId, setWorldId] = useState<number>(0);
@@ -45,12 +44,12 @@ function ClientTerminal() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-screen">
-        <div className="animate-pulse text-terminal-green text-xl">
+        <div className="text-terminal-green text-xl font-mono">
           Initializing terminal...
         </div>
       </div>
     );
   }
 
-  return <Terminal deviceId={deviceId} worldId={worldId} variant={variant} />;
+  return <Terminal deviceId={deviceId} variant={variant} />;
 }

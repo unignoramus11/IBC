@@ -85,7 +85,7 @@ export const updateSessionHistory = async (
   await db.collection('sessions').updateOne(
     { _id: sessionId },
     { 
-      $push: { history: message },
+      $push: { history: message } as any,
       $set: { lastActiveTime: new Date() }
     }
   );
