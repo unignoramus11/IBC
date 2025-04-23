@@ -20,6 +20,49 @@ export const metadata: Metadata = {
   title: "Terminal Adventure",
   description:
     "An interactive terminal-based adventure game for research on functional fixedness",
+  metadataBase: new URL("https://ibc-rouge.vercel.app/"),
+  applicationName: "Terminal Adventure",
+  authors: [{ name: "IBC Research Team" }],
+  keywords: [
+    "terminal game",
+    "research",
+    "functional fixedness",
+    "cognitive science",
+    "problem-solving",
+  ],
+  creator: "IBC Research Team",
+  publisher: "IBC Research",
+  robots: {
+    index: true,
+    follow: true,
+  },
+  alternates: {
+    canonical: "/",
+  },
+  openGraph: {
+    type: "website",
+    url: "https://terminal-adventure.example.com",
+    title: "Terminal Adventure",
+    description:
+      "Interactive terminal-based adventure game for cognitive research",
+    siteName: "Terminal Adventure",
+    images: [
+      {
+        url: "/android-icon-192x192.png",
+        width: 192,
+        height: 192,
+        alt: "Terminal Adventure Logo",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary",
+    title: "Terminal Adventure",
+    description:
+      "Interactive terminal-based adventure game for cognitive research",
+    images: ["/android-icon-192x192.png"],
+    creator: "@unignoramus11",
+  },
 };
 
 export default function RootLayout({
