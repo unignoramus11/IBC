@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Geist_Mono } from "next/font/google";
+import { Analytics } from "@vercel/analytics/react";
 import "./globals.css";
 
 const geistMono = Geist_Mono({
@@ -9,7 +10,8 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "Terminal Adventure",
-  description: "An interactive terminal-based adventure game for research on functional fixedness",
+  description:
+    "An interactive terminal-based adventure game for research on functional fixedness",
 };
 
 export default function RootLayout({
@@ -24,6 +26,7 @@ export default function RootLayout({
       </head>
       <body className={`${geistMono.variable}`}>
         {children}
+        <Analytics />
       </body>
     </html>
   );
