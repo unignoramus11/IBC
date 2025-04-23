@@ -754,7 +754,7 @@ ${worldDescriptions
             {variant === "A" ? "Control Variant" : "Experimental Variant"}
           </div>
           <div>
-            {messages.length > 0 ? `Session time: ${sessionTime}` : "00:00"}
+            {messages.length > 0 ? `${sessionTime}` : "00:00"}
           </div>
         </div>
 
