@@ -1,3 +1,17 @@
+/**
+ * ResponseDisplay.tsx
+ * -------------------
+ * React component for displaying system, user, and model/AI responses in the IBC Terminal research platform.
+ * Handles formatting, markdown stripping, and loading/typing feedback for research on user perception and feedback timing.
+ *
+ * Exports:
+ * - ResponseDisplay: Main display component for terminal responses
+ *
+ * Props:
+ * - messages: Array of message objects (role, content, timestamp)
+ * - isLoading: Whether the system is processing a command
+ */
+
 "use client";
 
 import React, { useEffect, useRef } from "react";
@@ -8,6 +22,9 @@ interface Message {
   timestamp: number;
 }
 
+/**
+ * Props for ResponseDisplay component.
+ */
 interface ResponseDisplayProps {
   messages: Message[];
   isLoading: boolean;
@@ -52,6 +69,11 @@ const stripMarkdown = (text: string): string => {
   return result;
 };
 
+/**
+ * ResponseDisplay React component for showing terminal messages and feedback.
+ * @param messages - Array of message objects
+ * @param isLoading - Whether the system is processing a command
+ */
 const ResponseDisplay: React.FC<ResponseDisplayProps> = ({
   messages,
   isLoading,

@@ -1,4 +1,22 @@
+/**
+ * dataCollection.ts
+ * -----------------
+ * Handles all user interaction tracking, session summary, and research data collection for the IBC Terminal research platform.
+ * Stores detailed keystroke metrics, puzzle context, and session analytics in localStorage for later upload to the backend.
+ * Provides metrics for research on functional fixedness and user problem-solving behavior.
+ *
+ * Exports:
+ * - trackUserInteraction: Store a user command and its metrics
+ * - updateInteraction: Update a stored interaction with AI response and puzzle context
+ * - generateSessionAnalysis: Generate a research analysis of the session
+ * - uploadStoredInteractions: Upload all locally stored data to the backend
+ * - calculateMetrics: Compute research metrics from raw interaction data
+ */
+
 // Interface for interaction data
+/**
+ * Represents a single user interaction with the terminal, including keystroke metrics and puzzle context.
+ */
 interface InteractionData {
   deviceId: string;
   command: string;
@@ -23,10 +41,17 @@ interface InteractionData {
   };
 }
 
-// Import the PuzzleAttempt interface from the Interaction model 
-import { PuzzleAttempt, FunctionalFixednessMetricsData, ConversationData } from '../models/Interaction';
+// Import the PuzzleAttempt interface from the Interaction model
+import {
+  PuzzleAttempt,
+  FunctionalFixednessMetricsData,
+  ConversationData,
+} from "../models/Interaction";
 
 // Interface for session summary data
+/**
+ * Represents a summary of a session, including puzzle attempts and functional fixedness analysis.
+ */
 interface SessionSummary {
   deviceId: string;
   worldId: number;
@@ -52,6 +77,10 @@ const LOCAL_STORAGE_KEY = "terminal_interactions";
 const SESSION_SUMMARY_KEY = "session_summary";
 
 // Track user interaction with the terminal - store locally until session completion
+/**
+ * Stores a user interaction in localStorage for later research analysis.
+ * @param data - The interaction data to store
+ */
 export const trackUserInteraction = async (data: InteractionData) => {
   debugLog("Tracking user interaction", {
     deviceId: data.deviceId,
@@ -127,6 +156,13 @@ export const trackUserInteraction = async (data: InteractionData) => {
 };
 
 // Update an existing interaction with response and puzzle context
+/**
+ * Updates a previously stored interaction with the AI's response and puzzle context.
+ * @param deviceId - The device/session ID
+ * @param timestamp - The timestamp of the interaction
+ * @param response - The AI's response text
+ * @param puzzleContext - (Optional) Puzzle context to update
+ */
 export const updateInteraction = async (
   deviceId: string,
   timestamp: number,
@@ -174,14 +210,14 @@ export const updateInteraction = async (
 
     // Update the interaction
     interactions[interactionIndex].response = response;
-    
+
     // Update puzzle context if provided
     if (puzzleContext) {
       interactions[interactionIndex].puzzleContext = {
         ...interactions[interactionIndex].puzzleContext,
         ...puzzleContext,
       };
-      
+
       // If this solved a puzzle, update session summary
       if (puzzleContext.isSolutionSuccess) {
         await updateSessionPuzzleSummary(interactions[interactionIndex]);
@@ -198,6 +234,10 @@ export const updateInteraction = async (
 };
 
 // Update the session summary when a puzzle is solved
+/**
+ * Updates the session summary in localStorage when a puzzle is solved.
+ * @param data - The interaction data that solved a puzzle
+ */
 const updateSessionPuzzleSummary = async (data: InteractionData) => {
   if (!data.puzzleContext?.activePuzzleId) return;
 
@@ -252,6 +292,10 @@ const updateSessionPuzzleSummary = async (data: InteractionData) => {
 };
 
 // Generate session analysis before uploading data
+/**
+ * Generates a research-oriented session analysis using all stored interactions and puzzle attempts.
+ * @returns The AI-generated analysis string, or null if unavailable
+ */
 export const generateSessionAnalysis = async (): Promise<string | null> => {
   try {
     // Get all stored interactions to analyze
@@ -301,7 +345,7 @@ export const generateSessionAnalysis = async (): Promise<string | null> => {
           puzzle.timeToSolution = solution - firstAttempt;
         }
       }
-      
+
       // Add puzzle metadata if available
       const firstPuzzleInteraction = puzzleData[0];
       if (firstPuzzleInteraction?.puzzleContext) {
@@ -309,34 +353,43 @@ export const generateSessionAnalysis = async (): Promise<string | null> => {
           puzzle.puzzleName = firstPuzzleInteraction.puzzleContext.puzzleName;
         }
         if (firstPuzzleInteraction.puzzleContext.fixedFunctionObject) {
-          puzzle.fixedFunctionObject = firstPuzzleInteraction.puzzleContext.fixedFunctionObject;
+          puzzle.fixedFunctionObject =
+            firstPuzzleInteraction.puzzleContext.fixedFunctionObject;
         }
       }
-      
+
       // Count conventional vs unconventional uses
       puzzle.conventionalUseCount = puzzleData.filter(
-        i => i.puzzleContext?.conventionalUse === true
+        (i) => i.puzzleContext?.conventionalUse === true
       ).length;
-      
+
       puzzle.unconventionalUseCount = puzzleData.filter(
-        i => i.puzzleContext?.isAttemptedSolution && !i.puzzleContext?.isSolutionSuccess
+        (i) =>
+          i.puzzleContext?.isAttemptedSolution &&
+          !i.puzzleContext?.isSolutionSuccess
       ).length;
-      
+
       // Calculate hesitation metrics
-      const hesitations = puzzleData.flatMap(i => i.metrics?.hesitations || []);
+      const hesitations = puzzleData.flatMap(
+        (i) => i.metrics?.hesitations || []
+      );
       puzzle.hesitationCount = hesitations.length;
-      
+
       if (hesitations.length > 0) {
-        puzzle.averageHesitationDuration = hesitations.reduce(
-          (sum, h) => sum + h.duration, 0
-        ) / hesitations.length;
+        puzzle.averageHesitationDuration =
+          hesitations.reduce((sum, h) => sum + h.duration, 0) /
+          hesitations.length;
       }
-      
+
       // Record first encounter and solution times
       if (puzzleData.length > 0) {
-        puzzle.firstEncounterTime = new Date(Math.min(...puzzleData.map(i => i.timestamp)));
-        
-        const solutionInteraction = puzzleData.find(i => i.puzzleContext?.isSolutionSuccess);
+        puzzle.firstEncounterTime = new Date(
+          Math.min(...puzzleData.map((i) => i.timestamp))
+        );
+
+        const solutionInteraction = puzzleData.find(
+          (i) => i.puzzleContext?.isSolutionSuccess
+        );
         if (solutionInteraction) {
           puzzle.solvedTime = new Date(solutionInteraction.timestamp);
         }
@@ -359,20 +412,21 @@ export const generateSessionAnalysis = async (): Promise<string | null> => {
 
     if (response.ok) {
       const analysisResult = await response.json();
-      
+
       // Store the complete analysis with all data
       summary.functionalFixednessAnalysis = analysisResult.analysis;
-      
+
       // Store additional metrics
       if (analysisResult.functionalFixednessMetrics) {
-        summary.functionalFixednessMetrics = analysisResult.functionalFixednessMetrics;
+        summary.functionalFixednessMetrics =
+          analysisResult.functionalFixednessMetrics;
       }
-      
+
       // Store conversation data
       if (analysisResult.conversationData) {
         summary.conversationData = analysisResult.conversationData;
       }
-      
+
       // Update puzzle attempts with enhanced metrics
       if (analysisResult.enhancedPuzzleAttempts) {
         summary.puzzleAttempts = analysisResult.enhancedPuzzleAttempts;
@@ -392,6 +446,10 @@ export const generateSessionAnalysis = async (): Promise<string | null> => {
 };
 
 // Upload all stored interactions to the server
+/**
+ * Uploads all stored interactions and session summary to the backend for research storage.
+ * @returns True if upload succeeded, false otherwise
+ */
 export const uploadStoredInteractions = async (): Promise<boolean> => {
   debugLog("Attempting to upload stored interactions");
 
@@ -491,6 +549,11 @@ export const uploadStoredInteractions = async (): Promise<boolean> => {
 };
 
 // Calculate metrics from raw interaction data
+/**
+ * Calculates research metrics from a list of user interactions.
+ * @param interactions - Array of InteractionData
+ * @returns Object containing various research metrics
+ */
 export const calculateMetrics = (interactions: InteractionData[]) => {
   debugLog("Calculating metrics from interactions", {
     interactionCount: interactions.length,
@@ -577,7 +640,11 @@ const analyzeHesitations = (interactions: InteractionData[]) => {
   debugLog("Analyzing hesitation patterns");
 
   // Analyze where users hesitate most frequently
-  let allHesitations: { duration: number; position: number; timestamp: number }[] = [];
+  let allHesitations: {
+    duration: number;
+    position: number;
+    timestamp: number;
+  }[] = [];
 
   interactions.forEach((interaction) => {
     allHesitations = [...allHesitations, ...interaction.metrics.hesitations];

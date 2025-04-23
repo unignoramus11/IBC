@@ -1,3 +1,15 @@
+/**
+ * analytics.ts
+ * ------------
+ * Provides utility functions for analyzing typing, hesitation, and decision patterns in user command data.
+ * Used for research on cognitive processes, problem-solving, and functional fixedness in the IBC Terminal platform.
+ *
+ * Exports:
+ * - analyzeTypingPatterns: Analyze typing speed, pauses, corrections, and keystroke patterns
+ * - analyzeHesitations: Analyze hesitation points and durations
+ * - analyzeDecisionPatterns: Analyze command usage, complexity, and exploration
+ */
+
 // Analytics processing utility
 
 interface KeystrokeMetrics {
@@ -18,33 +30,38 @@ interface CommandMetrics {
   commandLength: number;
 }
 
-// Analyze typing patterns from command metrics
+/**
+ * Analyzes typing patterns from command metrics for research purposes.
+ * @param metrics - CommandMetrics object containing keystrokes, corrections, hesitations, etc.
+ * @returns Typing speed, pause frequency, correction rate, and common keystroke patterns
+ */
 export const analyzeTypingPatterns = (
   metrics: CommandMetrics
-): { 
+): {
   typingSpeed: number;
   pauseFrequency: number;
   correctionRate: number;
   patterns: string[];
 } => {
   // Calculate typing speed (characters per minute)
-  const typingSpeed = metrics.inputDuration > 0 
-    ? (metrics.commandLength / (metrics.inputDuration / 1000)) * 60
-    : 0;
-  
+  const typingSpeed =
+    metrics.inputDuration > 0
+      ? (metrics.commandLength / (metrics.inputDuration / 1000)) * 60
+      : 0;
+
   // Calculate pause frequency (pauses per minute)
-  const pauseFrequency = metrics.inputDuration > 0
-    ? (metrics.hesitations.length / (metrics.inputDuration / 1000)) * 60
-    : 0;
-  
+  const pauseFrequency =
+    metrics.inputDuration > 0
+      ? (metrics.hesitations.length / (metrics.inputDuration / 1000)) * 60
+      : 0;
+
   // Calculate correction rate (corrections per character)
-  const correctionRate = metrics.commandLength > 0
-    ? metrics.corrections / metrics.commandLength
-    : 0;
-  
+  const correctionRate =
+    metrics.commandLength > 0 ? metrics.corrections / metrics.commandLength : 0;
+
   // Identify common keystroke patterns
   const patterns = identifyKeystrokePatterns(metrics.keystrokes);
-  
+
   return {
     typingSpeed,
     pauseFrequency,
@@ -58,18 +75,18 @@ const identifyKeystrokePatterns = (
   keystrokes: KeystrokeMetrics[]
 ): string[] => {
   if (keystrokes.length < 3) return [];
-  
+
   // Extract just the keys
-  const keys = keystrokes.map(k => k.key);
-  
+  const keys = keystrokes.map((k) => k.key);
+
   // Simple n-gram analysis for common 3-character sequences
   const trigrams: Record<string, number> = {};
-  
+
   for (let i = 0; i < keys.length - 2; i++) {
-    const trigram = keys.slice(i, i + 3).join('');
+    const trigram = keys.slice(i, i + 3).join("");
     trigrams[trigram] = (trigrams[trigram] || 0) + 1;
   }
-  
+
   // Return the top patterns
   return Object.entries(trigrams)
     .sort((a, b) => b[1] - a[1])
@@ -77,11 +94,16 @@ const identifyKeystrokePatterns = (
     .map(([pattern]) => pattern);
 };
 
-// Analyze hesitation patterns
+/**
+ * Analyzes hesitation patterns in a command for research on cognitive load.
+ * @param hesitations - Array of hesitation metrics
+ * @param commandLength - Length of the command
+ * @returns Major hesitation points and average hesitation duration
+ */
 export const analyzeHesitations = (
   hesitations: HesitationMetrics[],
   commandLength: number
-): { 
+): {
   majorHesitationPoints: number[];
   averageHesitationDuration: number;
 } => {
@@ -91,35 +113,37 @@ export const analyzeHesitations = (
       averageHesitationDuration: 0,
     };
   }
-  
+
   // Calculate relative positions of hesitations (as percentage of command length)
-  const relativePositions = hesitations.map(h => 
+  const relativePositions = hesitations.map((h) =>
     Math.floor((h.position / commandLength) * 100)
   );
-  
+
   // Find major hesitation points (positions with multiple hesitations)
   const positionCounts: Record<number, number> = {};
-  relativePositions.forEach(pos => {
+  relativePositions.forEach((pos) => {
     positionCounts[pos] = (positionCounts[pos] || 0) + 1;
   });
-  
+
   const majorHesitationPoints = Object.entries(positionCounts)
     .filter(([, count]) => count > 1)
     .map(([pos]) => parseInt(pos, 10));
-  
+
   // Calculate average hesitation duration
-  const averageHesitationDuration = hesitations.reduce(
-    (sum, h) => sum + h.duration, 
-    0
-  ) / hesitations.length;
-  
+  const averageHesitationDuration =
+    hesitations.reduce((sum, h) => sum + h.duration, 0) / hesitations.length;
+
   return {
     majorHesitationPoints,
     averageHesitationDuration,
   };
 };
 
-// Analyze decision patterns from command history
+/**
+ * Analyzes decision patterns from a user's command history for research on exploration and problem-solving.
+ * @param commandHistory - Array of command strings
+ * @returns Most common commands, command complexity, and exploration index
+ */
 export const analyzeDecisionPatterns = (
   commandHistory: string[]
 ): {
@@ -134,32 +158,31 @@ export const analyzeDecisionPatterns = (
       explorationIndex: 0,
     };
   }
-  
+
   // Count command frequencies
   const commandCounts: Record<string, number> = {};
-  commandHistory.forEach(cmd => {
+  commandHistory.forEach((cmd) => {
     // Extract the base command (first word)
-    const baseCommand = cmd.trim().split(' ')[0].toLowerCase();
+    const baseCommand = cmd.trim().split(" ")[0].toLowerCase();
     commandCounts[baseCommand] = (commandCounts[baseCommand] || 0) + 1;
   });
-  
+
   // Get most common commands
   const commonCommands = Object.entries(commandCounts)
     .sort((a, b) => b[1] - a[1])
     .slice(0, 5) as [string, number][];
-  
+
   // Calculate command complexity (average word count)
-  const commandComplexity = commandHistory.reduce(
-    (sum, cmd) => sum + cmd.trim().split(' ').length,
-    0
-  ) / commandHistory.length;
-  
+  const commandComplexity =
+    commandHistory.reduce((sum, cmd) => sum + cmd.trim().split(" ").length, 0) /
+    commandHistory.length;
+
   // Calculate exploration index (unique commands / total commands)
   const uniqueCommands = new Set(
-    commandHistory.map(cmd => cmd.trim().split(' ')[0].toLowerCase())
+    commandHistory.map((cmd) => cmd.trim().split(" ")[0].toLowerCase())
   ).size;
   const explorationIndex = uniqueCommands / commandHistory.length;
-  
+
   return {
     commonCommands,
     commandComplexity,

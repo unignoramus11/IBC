@@ -1,7 +1,21 @@
+/**
+ * Interaction.ts
+ * --------------
+ * Defines MongoDB models and interfaces for user interactions, session summaries, and research metrics in the IBC Terminal platform.
+ * Used for storing, retrieving, and analyzing participant behavior and functional fixedness data.
+ *
+ * Exports:
+ * - Interaction, PuzzleAttempt, FunctionalFixednessMetricsData, ConversationData, SessionSummary, FunctionalFixednessMetrics: TypeScript interfaces for research data
+ * - recordInteraction, recordSessionSummary, updateInteractionWithResponse, getDeviceInteractions, getDeviceSessionSummaries, getInteractionsForAnalysis, getSessionSummariesForAnalysis: MongoDB access functions
+ */
+
 // Interaction.ts - MongoDB model for user interactions
 
 import { ObjectId } from "mongodb";
 
+/**
+ * Represents a single user interaction with the terminal, including keystroke metrics and puzzle context.
+ */
 export interface Interaction {
   _id?: ObjectId;
   deviceId: string;
@@ -32,7 +46,9 @@ export interface Interaction {
   };
 }
 
-// New interface for the session summary with functional fixedness analysis
+/**
+ * Represents a single puzzle attempt within a session, including solution attempts and hesitation metrics.
+ */
 export interface PuzzleAttempt {
   puzzleId: string;
   puzzleName?: string;
@@ -48,6 +64,9 @@ export interface PuzzleAttempt {
   solvedTime?: Date; // When the puzzle was solved
 }
 
+/**
+ * Research metrics for functional fixedness, including overall level, hesitation, and approach.
+ */
 export interface FunctionalFixednessMetricsData {
   overallFixednessLevel: string; // "High", "Moderate", "Low"
   averageHesitationDuration: number; // Average hesitation across all puzzles
@@ -58,14 +77,20 @@ export interface FunctionalFixednessMetricsData {
   insightMomentsObserved: number; // Count of apparent insight moments
 }
 
+/**
+ * Conversation-level data for a session, including full transcript and command statistics.
+ */
 export interface ConversationData {
-  fullConversation: {role: string, content: string, timestamp: number}[]; // Complete conversation history
+  fullConversation: { role: string; content: string; timestamp: number }[]; // Complete conversation history
   totalDuration: number; // Total session duration in ms
   commandCount: number; // Total commands issued
   uniqueCommandTypes: number; // Number of unique command categories
   mostFrequentCommands: string[]; // Top used commands
 }
 
+/**
+ * Represents a summary of a session, including puzzle attempts and research analysis.
+ */
 export interface SessionSummary {
   _id?: ObjectId;
   deviceId: string;
@@ -81,6 +106,9 @@ export interface SessionSummary {
   completionTimestamp: Date;
 }
 
+/**
+ * Detailed functional fixedness metrics for a session or puzzle.
+ */
 export interface FunctionalFixednessMetrics {
   // Core metrics from Duncker's paradigm
   timeToSolution: number; // Time from puzzle presentation to solution in ms
@@ -105,7 +133,12 @@ export interface FunctionalFixednessMetrics {
   variantEffectSize?: number; // Calculated difference in performance between variants
 }
 
-// Record a new interaction
+/**
+ * Records a new user interaction in the database.
+ * @param db - MongoDB database instance
+ * @param interaction - The interaction data (without _id)
+ * @returns The inserted Interaction with _id
+ */
 export const recordInteraction = async (
   db: any,
   interaction: Omit<Interaction, "_id">
@@ -121,7 +154,12 @@ export const recordInteraction = async (
   };
 };
 
-// Record a session summary
+/**
+ * Records a session summary in the database.
+ * @param db - MongoDB database instance
+ * @param summary - The session summary data (without _id)
+ * @returns The inserted ObjectId
+ */
 export const recordSessionSummary = async (
   db: any,
   summary: Omit<SessionSummary, "_id">
@@ -130,7 +168,12 @@ export const recordSessionSummary = async (
   return result.insertedId;
 };
 
-// Update an interaction with response time
+/**
+ * Updates an interaction with the model's response time.
+ * @param db - MongoDB database instance
+ * @param interactionId - The ObjectId of the interaction
+ * @param responseTime - The response time in ms
+ */
 export const updateInteractionWithResponse = async (
   db: any,
   interactionId: ObjectId,
@@ -141,7 +184,13 @@ export const updateInteractionWithResponse = async (
     .updateOne({ _id: interactionId }, { $set: { responseTime } });
 };
 
-// Get interactions for a device
+/**
+ * Retrieves recent interactions for a device.
+ * @param db - MongoDB database instance
+ * @param deviceId - The device/session ID
+ * @param limit - Maximum number of interactions to return
+ * @returns Array of Interaction objects
+ */
 export const getDeviceInteractions = async (
   db: any,
   deviceId: string,
@@ -155,7 +204,13 @@ export const getDeviceInteractions = async (
     .toArray();
 };
 
-// Get session summaries for a device
+/**
+ * Retrieves recent session summaries for a device.
+ * @param db - MongoDB database instance
+ * @param deviceId - The device/session ID
+ * @param limit - Maximum number of summaries to return
+ * @returns Array of SessionSummary objects
+ */
 export const getDeviceSessionSummaries = async (
   db: any,
   deviceId: string,
@@ -169,7 +224,13 @@ export const getDeviceSessionSummaries = async (
     .toArray();
 };
 
-// Get interactions for analysis
+/**
+ * Retrieves interactions for research analysis based on a query.
+ * @param db - MongoDB database instance
+ * @param query - MongoDB query object
+ * @param limit - Maximum number of interactions to return
+ * @returns Array of Interaction objects
+ */
 export const getInteractionsForAnalysis = async (
   db: any,
   query: any = {},
@@ -183,7 +244,13 @@ export const getInteractionsForAnalysis = async (
     .toArray();
 };
 
-// Get session summaries for analysis
+/**
+ * Retrieves session summaries for research analysis based on a query.
+ * @param db - MongoDB database instance
+ * @param query - MongoDB query object
+ * @param limit - Maximum number of summaries to return
+ * @returns Array of SessionSummary objects
+ */
 export const getSessionSummariesForAnalysis = async (
   db: any,
   query: any = {},

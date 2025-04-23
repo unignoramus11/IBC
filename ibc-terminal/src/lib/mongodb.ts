@@ -1,4 +1,15 @@
-import { MongoClient } from 'mongodb';
+/**
+ * mongodb.ts
+ * ----------
+ * Handles MongoDB connection pooling and database access for the IBC Terminal research backend.
+ * Ensures efficient and safe database usage in both development and production environments.
+ *
+ * Exports:
+ * - getDatabase: Returns a connected MongoDB database instance
+ * - (default) clientPromise: The MongoDB client connection promise
+ */
+
+import { MongoClient } from "mongodb";
 
 // Global variables to cache the MongoDB connection
 let client: MongoClient;
@@ -8,7 +19,7 @@ let clientPromise: Promise<MongoClient>;
 const uri = process.env.MONGODB_URI;
 
 if (!uri) {
-  throw new Error('Please define the MONGODB_URI environment variable');
+  throw new Error("Please define the MONGODB_URI environment variable");
 }
 
 declare global {
@@ -16,7 +27,7 @@ declare global {
   var _mongoClientPromise: Promise<MongoClient>;
 }
 
-if (process.env.NODE_ENV === 'development') {
+if (process.env.NODE_ENV === "development") {
   // In development mode, use a global variable so that the value
   // is preserved across module reloads caused by HMR (Hot Module Replacement).
   if (!global._mongoClientPromise) {
@@ -33,8 +44,11 @@ if (process.env.NODE_ENV === 'development') {
 // Export the clientPromise for use in other files
 export default clientPromise;
 
-// Helper function to get database connection
+/**
+ * Returns a connected MongoDB database instance for the research platform.
+ * @returns The 'ibc-terminal' database
+ */
 export async function getDatabase() {
   const client = await clientPromise;
-  return client.db('ibc-terminal');
+  return client.db("ibc-terminal");
 }

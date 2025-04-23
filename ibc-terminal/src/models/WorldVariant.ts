@@ -1,11 +1,26 @@
+/**
+ * WorldVariant.ts
+ * ---------------
+ * Defines MongoDB models and interfaces for tracking world/variant performance in the IBC Terminal research platform.
+ * Used for research comparison of experimental/control variants, puzzle performance, and session outcomes.
+ *
+ * Exports:
+ * - WorldVariant: TypeScript interface for variant-level stats
+ * - updateVariantStats: Initialize or update stats for a world/variant
+ * - getVariantComparison: Compare performance between variants for a world
+ */
+
 // WorldVariant.ts - MongoDB model for tracking variant performance
 
-import { ObjectId } from 'mongodb';
+import { ObjectId } from "mongodb";
 
+/**
+ * Represents aggregate stats for a world/variant, including puzzle and session metrics.
+ */
 export interface WorldVariant {
   _id?: ObjectId;
   worldId: number;
-  variant: 'A' | 'B';
+  variant: "A" | "B";
   totalUsers: number;
   puzzleStats: {
     [puzzleId: string]: {
@@ -19,20 +34,27 @@ export interface WorldVariant {
   completionRate: number; // Percentage of users who completed all objectives
 }
 
-// Initialize or update variant stats
+/**
+ * Initializes or updates stats for a world/variant after a session completes.
+ * @param db - MongoDB database instance
+ * @param worldId - The world index
+ * @param variant - The experimental/control variant
+ * @param sessionData - Session summary data (duration, completion, puzzles)
+ */
 export const updateVariantStats = async (
   db: any,
   worldId: number,
-  variant: 'A' | 'B',
+  variant: "A" | "B",
   sessionData: any
 ): Promise<void> => {
   // First, check if stats exist for this variant
-  const existingStats = await db.collection('worldVariants')
+  const existingStats = await db
+    .collection("worldVariants")
     .findOne({ worldId, variant });
-  
+
   if (!existingStats) {
     // Create new stats record
-    await db.collection('worldVariants').insertOne({
+    await db.collection("worldVariants").insertOne({
       worldId,
       variant,
       totalUsers: 1,
@@ -42,31 +64,32 @@ export const updateVariantStats = async (
     });
     return;
   }
-  
+
   // Calculate new values
   const newTotalUsers = existingStats.totalUsers + 1;
-  const newAvgDuration = (
-    (existingStats.averageSessionDuration * existingStats.totalUsers) + 
-    sessionData.duration
-  ) / newTotalUsers;
-  
-  const newCompletionRate = (
-    (existingStats.completionRate * existingStats.totalUsers / 100) + 
-    (sessionData.completed ? 1 : 0)
-  ) / newTotalUsers * 100;
-  
+  const newAvgDuration =
+    (existingStats.averageSessionDuration * existingStats.totalUsers +
+      sessionData.duration) /
+    newTotalUsers;
+
+  const newCompletionRate =
+    (((existingStats.completionRate * existingStats.totalUsers) / 100 +
+      (sessionData.completed ? 1 : 0)) /
+      newTotalUsers) *
+    100;
+
   // Update existing stats
-  await db.collection('worldVariants').updateOne(
+  await db.collection("worldVariants").updateOne(
     { worldId, variant },
     {
       $set: {
         totalUsers: newTotalUsers,
         averageSessionDuration: newAvgDuration,
         completionRate: newCompletionRate,
-      }
+      },
     }
   );
-  
+
   // Update puzzle stats (would be more complex in a real implementation)
   for (const [puzzleId, puzzleData] of Object.entries(sessionData.puzzles)) {
     await updatePuzzleStats(db, worldId, variant, puzzleId, puzzleData);
@@ -77,16 +100,17 @@ export const updateVariantStats = async (
 const updatePuzzleStats = async (
   db: any,
   worldId: number,
-  variant: 'A' | 'B',
+  variant: "A" | "B",
   puzzleId: string,
   puzzleData: any
 ) => {
-  const existingStats = await db.collection('worldVariants')
+  const existingStats = await db
+    .collection("worldVariants")
     .findOne({ worldId, variant });
-  
+
   // If puzzle doesn't exist in stats yet
   if (!existingStats.puzzleStats[puzzleId]) {
-    await db.collection('worldVariants').updateOne(
+    await db.collection("worldVariants").updateOne(
       { worldId, variant },
       {
         $set: {
@@ -95,31 +119,36 @@ const updatePuzzleStats = async (
             solved: puzzleData.solved ? 1 : 0,
             averageAttempts: puzzleData.attempts || 0,
             averageSolutionTime: puzzleData.solutionTime || 0,
-          }
-        }
+          },
+        },
       }
     );
     return;
   }
-  
+
   // Update existing puzzle stats
   const currentStats = existingStats.puzzleStats[puzzleId];
-  const totalDiscovered = currentStats.discovered + (puzzleData.discovered ? 1 : 0);
+  const totalDiscovered =
+    currentStats.discovered + (puzzleData.discovered ? 1 : 0);
   const totalSolved = currentStats.solved + (puzzleData.solved ? 1 : 0);
-  
+
   // Calculate new averages
-  const newAvgAttempts = currentStats.solved > 0 
-    ? ((currentStats.averageAttempts * currentStats.solved) + (puzzleData.attempts || 0)) / 
-      (currentStats.solved + (puzzleData.solved ? 1 : 0))
-    : puzzleData.attempts || 0;
-  
-  const newAvgSolutionTime = currentStats.solved > 0
-    ? ((currentStats.averageSolutionTime * currentStats.solved) + (puzzleData.solutionTime || 0)) / 
-      (currentStats.solved + (puzzleData.solved ? 1 : 0))
-    : puzzleData.solutionTime || 0;
-  
+  const newAvgAttempts =
+    currentStats.solved > 0
+      ? (currentStats.averageAttempts * currentStats.solved +
+          (puzzleData.attempts || 0)) /
+        (currentStats.solved + (puzzleData.solved ? 1 : 0))
+      : puzzleData.attempts || 0;
+
+  const newAvgSolutionTime =
+    currentStats.solved > 0
+      ? (currentStats.averageSolutionTime * currentStats.solved +
+          (puzzleData.solutionTime || 0)) /
+        (currentStats.solved + (puzzleData.solved ? 1 : 0))
+      : puzzleData.solutionTime || 0;
+
   // Update the database
-  await db.collection('worldVariants').updateOne(
+  await db.collection("worldVariants").updateOne(
     { worldId, variant },
     {
       $set: {
@@ -127,26 +156,33 @@ const updatePuzzleStats = async (
         [`puzzleStats.${puzzleId}.solved`]: totalSolved,
         [`puzzleStats.${puzzleId}.averageAttempts`]: newAvgAttempts,
         [`puzzleStats.${puzzleId}.averageSolutionTime`]: newAvgSolutionTime,
-      }
+      },
     }
   );
 };
 
-// Get comparison data between variants
+/**
+ * Gets a comparison of performance metrics between variants for a world.
+ * @param db - MongoDB database instance
+ * @param worldId - The world index
+ * @returns Object with user counts, session duration, completion rate, and puzzle stats comparison
+ */
 export const getVariantComparison = async (
   db: any,
   worldId: number
 ): Promise<any> => {
-  const variantA = await db.collection('worldVariants')
-    .findOne({ worldId, variant: 'A' });
-  
-  const variantB = await db.collection('worldVariants')
-    .findOne({ worldId, variant: 'B' });
-  
+  const variantA = await db
+    .collection("worldVariants")
+    .findOne({ worldId, variant: "A" });
+
+  const variantB = await db
+    .collection("worldVariants")
+    .findOne({ worldId, variant: "B" });
+
   if (!variantA || !variantB) {
-    return { error: 'Insufficient data for comparison' };
+    return { error: "Insufficient data for comparison" };
   }
-  
+
   // Create comparison object
   return {
     worldId,
@@ -157,37 +193,51 @@ export const getVariantComparison = async (
     sessionDuration: {
       variantA: variantA.averageSessionDuration,
       variantB: variantB.averageSessionDuration,
-      difference: variantB.averageSessionDuration - variantA.averageSessionDuration,
-      percentChange: ((variantB.averageSessionDuration - variantA.averageSessionDuration) / 
-        variantA.averageSessionDuration * 100).toFixed(2),
+      difference:
+        variantB.averageSessionDuration - variantA.averageSessionDuration,
+      percentChange: (
+        ((variantB.averageSessionDuration - variantA.averageSessionDuration) /
+          variantA.averageSessionDuration) *
+        100
+      ).toFixed(2),
     },
     completionRate: {
       variantA: variantA.completionRate,
       variantB: variantB.completionRate,
       difference: variantB.completionRate - variantA.completionRate,
-      percentChange: ((variantB.completionRate - variantA.completionRate) / 
-        variantA.completionRate * 100).toFixed(2),
+      percentChange: (
+        ((variantB.completionRate - variantA.completionRate) /
+          variantA.completionRate) *
+        100
+      ).toFixed(2),
     },
     puzzles: comparePuzzleStats(variantA.puzzleStats, variantB.puzzleStats),
   };
 };
 
 // Helper to compare puzzle statistics between variants
-const comparePuzzleStats = (
-  statsA: any,
-  statsB: any
-) => {
+const comparePuzzleStats = (statsA: any, statsB: any) => {
   const allPuzzleIds = new Set([
     ...Object.keys(statsA),
     ...Object.keys(statsB),
   ]);
-  
+
   const comparison: any = {};
-  
-  allPuzzleIds.forEach(puzzleId => {
-    const puzzleA = statsA[puzzleId] || { discovered: 0, solved: 0, averageAttempts: 0, averageSolutionTime: 0 };
-    const puzzleB = statsB[puzzleId] || { discovered: 0, solved: 0, averageAttempts: 0, averageSolutionTime: 0 };
-    
+
+  allPuzzleIds.forEach((puzzleId) => {
+    const puzzleA = statsA[puzzleId] || {
+      discovered: 0,
+      solved: 0,
+      averageAttempts: 0,
+      averageSolutionTime: 0,
+    };
+    const puzzleB = statsB[puzzleId] || {
+      discovered: 0,
+      solved: 0,
+      averageAttempts: 0,
+      averageSolutionTime: 0,
+    };
+
     comparison[puzzleId] = {
       discoveryRate: {
         variantA: puzzleA.discovered,
@@ -203,22 +253,30 @@ const comparePuzzleStats = (
         variantA: puzzleA.averageAttempts,
         variantB: puzzleB.averageAttempts,
         difference: puzzleB.averageAttempts - puzzleA.averageAttempts,
-        percentChange: puzzleA.averageAttempts > 0 
-          ? ((puzzleB.averageAttempts - puzzleA.averageAttempts) / 
-            puzzleA.averageAttempts * 100).toFixed(2)
-          : 'N/A',
+        percentChange:
+          puzzleA.averageAttempts > 0
+            ? (
+                ((puzzleB.averageAttempts - puzzleA.averageAttempts) /
+                  puzzleA.averageAttempts) *
+                100
+              ).toFixed(2)
+            : "N/A",
       },
       solutionTime: {
         variantA: puzzleA.averageSolutionTime,
         variantB: puzzleB.averageSolutionTime,
         difference: puzzleB.averageSolutionTime - puzzleA.averageSolutionTime,
-        percentChange: puzzleA.averageSolutionTime > 0
-          ? ((puzzleB.averageSolutionTime - puzzleA.averageSolutionTime) / 
-            puzzleA.averageSolutionTime * 100).toFixed(2)
-          : 'N/A',
+        percentChange:
+          puzzleA.averageSolutionTime > 0
+            ? (
+                ((puzzleB.averageSolutionTime - puzzleA.averageSolutionTime) /
+                  puzzleA.averageSolutionTime) *
+                100
+              ).toFixed(2)
+            : "N/A",
       },
     };
   });
-  
+
   return comparison;
 };

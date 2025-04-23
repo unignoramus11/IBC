@@ -1,3 +1,19 @@
+/**
+ * Terminal.tsx
+ * ------------
+ * Main interactive terminal component for the IBC Terminal research platform.
+ * Handles world selection, session initialization, command input, response display, and session completion logic.
+ * Integrates with data collection and world allocation modules for research on functional fixedness and problem-solving.
+ *
+ * Exports:
+ * - Terminal: Main terminal UI and logic component
+ *
+ * Props:
+ * - deviceId: Unique identifier for the participant's device/session
+ * - worldId: (Optional) Pre-selected world index
+ * - variant: Experimental/control variant ("A" or "B")
+ */
+
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
@@ -14,6 +30,9 @@ const debugLog = (message: string, ...data: any[]) => {
   }
 };
 
+/**
+ * Props for Terminal component.
+ */
 interface TerminalProps {
   deviceId: string;
   worldId?: number; // Optional now, as we'll select it via CLI
@@ -31,18 +50,27 @@ const formatSessionTime = (startTime: number): string => {
   const elapsed = Math.floor((Date.now() - startTime) / 1000);
   const minutes = Math.floor(elapsed / 60);
   const seconds = elapsed % 60;
-  return `${minutes.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
+  return `${minutes.toString().padStart(2, "0")}:${seconds
+    .toString()
+    .padStart(2, "0")}`;
 };
 
+/**
+ * Terminal React component for the main experiment interface and session logic.
+ * @param deviceId - Unique device/session ID
+ * @param worldId - (Optional) Pre-selected world index
+ * @param variant - Experimental/control variant
+ */
 const Terminal: React.FC<TerminalProps> = ({ deviceId, worldId, variant }) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [sessionComplete, setSessionComplete] = useState<boolean>(false);
   const [selectedWorldId, setSelectedWorldId] = useState<number | undefined>(
-    worldId,
+    worldId
   );
-  const [worldSelectionMode, setWorldSelectionMode] =
-    useState<boolean>(!worldId);
+  const [worldSelectionMode, setWorldSelectionMode] = useState<boolean>(
+    !worldId
+  );
   const terminalRef = useRef<HTMLDivElement>(null);
   const initializedRef = useRef<boolean>(false);
   const [sessionTime, setSessionTime] = useState<string>("00:00");
@@ -52,15 +80,15 @@ const Terminal: React.FC<TerminalProps> = ({ deviceId, worldId, variant }) => {
     if (messages.length > 0) {
       // Use requestAnimationFrame to update time smoothly during animations
       let frameId: number;
-      
+
       const updateTime = () => {
         setSessionTime(formatSessionTime(messages[0].timestamp));
         frameId = requestAnimationFrame(updateTime);
       };
-      
+
       // Start the animation frame loop
       frameId = requestAnimationFrame(updateTime);
-      
+
       // Clean up
       return () => {
         cancelAnimationFrame(frameId);
@@ -148,7 +176,7 @@ ${worldDescriptions
     (world, index) =>
       `[${index + 1}] ${world.name} - ${world.description.substring(0, 150)}${
         world.description.length > 150 ? "..." : ""
-      }`,
+      }`
   )
   .join("\n\n")}
 
@@ -308,7 +336,7 @@ ${worldDescriptions
             setMessages((prev) => {
               const newMessages = [...prev];
               const messageIndex = newMessages.findIndex(
-                (msg) => msg.role === "model" && msg.timestamp === timestamp,
+                (msg) => msg.role === "model" && msg.timestamp === timestamp
               );
               if (messageIndex !== -1) {
                 newMessages[messageIndex].content = displayedText;
@@ -339,14 +367,14 @@ ${worldDescriptions
           setMessages((prev) => {
             const newMessages = [...prev];
             const messageIndex = newMessages.findIndex(
-              (msg) => msg.role === "model" && msg.timestamp === timestamp,
+              (msg) => msg.role === "model" && msg.timestamp === timestamp
             );
             if (messageIndex !== -1) {
               newMessages[messageIndex].content = initialMessage;
               debugLog("Set full message content after animation failure");
             } else {
               debugLog(
-                "Failed to find message to update after animation failure",
+                "Failed to find message to update after animation failure"
               );
             }
             return newMessages;
@@ -602,7 +630,7 @@ ${worldDescriptions
         deviceId,
         interactionTimestamp,
         responseData.response,
-        responseData.puzzleContext,
+        responseData.puzzleContext
       );
 
       // First end the loading state to stop thinking sound
@@ -652,7 +680,7 @@ ${worldDescriptions
         const baseSpeed = 40; // characters per second
         const adjustedSpeed = Math.min(
           Math.max(baseSpeed, responseText.length / 20),
-          80,
+          80
         );
         const delayBetweenChars = 1000 / adjustedSpeed;
         debugLog("Animation parameters", {
@@ -670,7 +698,7 @@ ${worldDescriptions
           setMessages((prev) => {
             const newMessages = [...prev];
             const messageIndex = newMessages.findIndex(
-              (msg) => msg.role === "model" && msg.timestamp === timestamp,
+              (msg) => msg.role === "model" && msg.timestamp === timestamp
             );
             if (messageIndex !== -1) {
               newMessages[messageIndex].content = currentText;
@@ -690,7 +718,7 @@ ${worldDescriptions
 
           // Wait before adding the next character
           await new Promise((resolve) =>
-            setTimeout(resolve, delayBetweenChars),
+            setTimeout(resolve, delayBetweenChars)
           );
         }
 
@@ -708,7 +736,7 @@ ${worldDescriptions
         setMessages((prev) => {
           const newMessages = [...prev];
           const messageIndex = newMessages.findIndex(
-            (msg) => msg.role === "model" && msg.timestamp === timestamp,
+            (msg) => msg.role === "model" && msg.timestamp === timestamp
           );
           if (messageIndex !== -1) {
             newMessages[messageIndex].content = responseText;
@@ -753,9 +781,7 @@ ${worldDescriptions
           <div>
             {variant === "A" ? "Control Variant" : "Experimental Variant"}
           </div>
-          <div>
-            {messages.length > 0 ? `${sessionTime}` : "00:00"}
-          </div>
+          <div>{messages.length > 0 ? `${sessionTime}` : "00:00"}</div>
         </div>
 
         <div ref={terminalRef} className="flex-grow p-4 overflow-y-auto">

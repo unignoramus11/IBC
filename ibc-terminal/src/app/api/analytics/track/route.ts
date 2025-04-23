@@ -1,7 +1,22 @@
+/**
+ * /api/analytics/track/route.ts
+ * ----------------------------
+ * API endpoint for uploading user interaction and session summary data for research analytics in the IBC Terminal platform.
+ * Accepts both single and batch uploads from the client, storing detailed command, response, and metrics data in MongoDB.
+ * Used for research on functional fixedness, problem-solving, and session analysis.
+ *
+ * POST: Accepts JSON body with either a single interaction or an array of interactions and an optional session summary.
+ */
+
 import { NextRequest, NextResponse } from "next/server";
 import { getDatabase } from "@/lib/mongodb";
 import { recordInteraction, recordSessionSummary } from "@/models/Interaction";
 
+/**
+ * Handles POST requests to store user interactions and session summaries for research analytics.
+ * @param request - Next.js API request object
+ * @returns JSON response indicating success or error
+ */
 export async function POST(request: NextRequest) {
   try {
     // Parse request body - now could be a single interaction or an array

@@ -1,3 +1,18 @@
+/**
+ * CommandInput.tsx
+ * ----------------
+ * React component for user command input in the IBC Terminal research platform.
+ * Collects detailed keystroke, correction, and hesitation metrics for research on problem-solving and cognitive processes.
+ *
+ * Exports:
+ * - CommandInput: Main input component for terminal commands
+ *
+ * Props:
+ * - onSubmit: Function to handle command submission and metrics
+ * - isDisabled: Whether input is disabled (e.g., during processing)
+ * - isSessionComplete: Whether the session is complete (disables input)
+ */
+
 "use client";
 
 import React, { useState, useRef, useEffect } from "react";
@@ -9,6 +24,9 @@ const debugLog = (message: string, ...data: any[]) => {
   }
 };
 
+/**
+ * Props for CommandInput component.
+ */
 interface CommandInputProps {
   onSubmit: (command: string, metrics: any) => void;
   isDisabled: boolean;
@@ -26,6 +44,12 @@ interface KeystrokeMetrics {
   commandLength: number;
 }
 
+/**
+ * CommandInput React component for capturing user commands and research metrics.
+ * @param onSubmit - Handler for command submission and metrics
+ * @param isDisabled - Whether input is disabled
+ * @param isSessionComplete - Whether session is complete
+ */
 const CommandInput: React.FC<CommandInputProps> = ({
   onSubmit,
   isDisabled,

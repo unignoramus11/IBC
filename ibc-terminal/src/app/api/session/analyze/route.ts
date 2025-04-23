@@ -1,7 +1,22 @@
+/**
+ * /api/session/analyze/route.ts
+ * -----------------------------
+ * API endpoint for generating a research analysis of a user session in the IBC Terminal platform.
+ * Aggregates session metrics, puzzle attempts, and conversation data, then uses Gemini to generate a functional fixedness analysis.
+ * Used for research reporting, session review, and automated experiment analysis.
+ *
+ * POST: Accepts worldId, variant, interactions, and puzzleAttempts; returns structured analysis and metrics.
+ */
+
 import { NextRequest, NextResponse } from "next/server";
 import { generateSessionAnalysis } from "../../../../config/systemPrompts";
 import { getAnalysisFromPrompt } from "../../../../lib/gemini";
 
+/**
+ * Handles POST requests to generate a research analysis of a session.
+ * @param request - Next.js API request object
+ * @returns JSON response with analysis, metrics, and enhanced puzzle data
+ */
 export async function POST(request: NextRequest) {
   try {
     const { worldId, variant, interactions, puzzleAttempts } =
@@ -39,20 +54,36 @@ export async function POST(request: NextRequest) {
       .sort((a: any, b: any) => a.timestamp - b.timestamp);
 
     // Calculate additional metrics for analysis
-    const totalAttempts = puzzleAttempts.reduce((sum: number, puzzle: any) => sum + puzzle.attemptCount, 0);
-    const solvedPuzzles = puzzleAttempts.filter((puzzle: any) => puzzle.solutionFound).length;
-    const averageTimeToSolution = puzzleAttempts
-      .filter((puzzle: any) => puzzle.timeToSolution)
-      .reduce((sum: number, puzzle: any) => sum + puzzle.timeToSolution, 0) / 
-      Math.max(1, puzzleAttempts.filter((puzzle: any) => puzzle.timeToSolution).length);
-    
+    const totalAttempts = puzzleAttempts.reduce(
+      (sum: number, puzzle: any) => sum + puzzle.attemptCount,
+      0
+    );
+    const solvedPuzzles = puzzleAttempts.filter(
+      (puzzle: any) => puzzle.solutionFound
+    ).length;
+    const averageTimeToSolution =
+      puzzleAttempts
+        .filter((puzzle: any) => puzzle.timeToSolution)
+        .reduce((sum: number, puzzle: any) => sum + puzzle.timeToSolution, 0) /
+      Math.max(
+        1,
+        puzzleAttempts.filter((puzzle: any) => puzzle.timeToSolution).length
+      );
+
     // Extract hesitation data
     const hesitationData = interactions
       .flatMap((interaction: any) => interaction.metrics?.hesitations || [])
-      .map((h: any) => ({ duration: h.duration, position: h.position, timestamp: h.timestamp }));
-      
-    const averageHesitationDuration = hesitationData.length > 0 ?
-      hesitationData.reduce((sum: number, h: any) => sum + h.duration, 0) / hesitationData.length : 0;
+      .map((h: any) => ({
+        duration: h.duration,
+        position: h.position,
+        timestamp: h.timestamp,
+      }));
+
+    const averageHesitationDuration =
+      hesitationData.length > 0
+        ? hesitationData.reduce((sum: number, h: any) => sum + h.duration, 0) /
+          hesitationData.length
+        : 0;
 
     // Generate analysis using Gemini API
     const prompt = `
@@ -87,28 +118,28 @@ IMPORTANT: Structure your analysis clearly with headings and formatted numbers f
 `;
 
     // Generate the analysis with a device ID for the specific session
-    const deviceId = interactions[0]?.deviceId || 'unknown';
+    const deviceId = interactions[0]?.deviceId || "unknown";
     const history = messages.map((msg: any) => ({
-      role: msg.role === 'assistant' ? 'model' : 'user',
-      parts: [{ text: msg.content }]
+      role: msg.role === "assistant" ? "model" : "user",
+      parts: [{ text: msg.content }],
     }));
-    
+
     const analysisResult = await getAnalysisFromPrompt(
-      deviceId, 
-      prompt, 
-      worldId, 
+      deviceId,
+      prompt,
+      worldId,
       variant as "A" | "B",
       history
     );
-    
+
     const analysisText = analysisResult.text;
 
     // Extract key metrics from the analysis text for structured storage
     const functionalFixednessMetrics = extractMetricsFromAnalysis(
-      analysisText, 
-      worldId, 
-      variant, 
-      interactions, 
+      analysisText,
+      worldId,
+      variant,
+      interactions,
       puzzleAttempts,
       hesitationData
     );
@@ -118,13 +149,19 @@ IMPORTANT: Structure your analysis clearly with headings and formatted numbers f
       fullConversation: messages.map((msg: any) => ({
         role: msg.role,
         content: msg.content,
-        timestamp: msg.timestamp
+        timestamp: msg.timestamp,
       })),
-      totalDuration: messages.length > 1 ? 
-        messages[messages.length - 1].timestamp - messages[0].timestamp : 0,
-      commandCount: messages.filter((msg: any) => msg.role === 'user').length,
-      uniqueCommandTypes: countUniqueCommandTypes(messages.filter((msg: any) => msg.role === 'user')),
-      mostFrequentCommands: getTopCommands(messages.filter((msg: any) => msg.role === 'user'))
+      totalDuration:
+        messages.length > 1
+          ? messages[messages.length - 1].timestamp - messages[0].timestamp
+          : 0,
+      commandCount: messages.filter((msg: any) => msg.role === "user").length,
+      uniqueCommandTypes: countUniqueCommandTypes(
+        messages.filter((msg: any) => msg.role === "user")
+      ),
+      mostFrequentCommands: getTopCommands(
+        messages.filter((msg: any) => msg.role === "user")
+      ),
     };
 
     // Create enhanced puzzle attempt data with more metrics
@@ -133,12 +170,15 @@ IMPORTANT: Structure your analysis clearly with headings and formatted numbers f
       interactions
     );
 
-    return NextResponse.json({
-      analysis: analysisText,
-      functionalFixednessMetrics,
-      conversationData,
-      enhancedPuzzleAttempts
-    }, { status: 200 });
+    return NextResponse.json(
+      {
+        analysis: analysisText,
+        functionalFixednessMetrics,
+        conversationData,
+        enhancedPuzzleAttempts,
+      },
+      { status: 200 }
+    );
   } catch (error) {
     console.error("Error in session analysis:", error);
     return NextResponse.json(
@@ -160,36 +200,47 @@ function extractMetricsFromAnalysis(
   // Default values
   const metrics = {
     overallFixednessLevel: "Moderate",
-    averageHesitationDuration: hesitationData.length > 0 ?
-      Math.round(hesitationData.reduce((sum, h) => sum + h.duration, 0) / hesitationData.length) : 0,
+    averageHesitationDuration:
+      hesitationData.length > 0
+        ? Math.round(
+            hesitationData.reduce((sum, h) => sum + h.duration, 0) /
+              hesitationData.length
+          )
+        : 0,
     totalHesitations: hesitationData.length,
     problemSolvingApproach: "Balanced",
     environmentalPrimingEffectiveness: variant === "B" ? "Moderate" : undefined,
     experimentQualityScore: 7,
-    insightMomentsObserved: 0
+    insightMomentsObserved: 0,
   };
-  
+
   // Extract overall fixedness level
-  const fixednessMatch = analysis.match(/fixedness observed: (High|Moderate|Low)/i);
+  const fixednessMatch = analysis.match(
+    /fixedness observed: (High|Moderate|Low)/i
+  );
   if (fixednessMatch) {
     metrics.overallFixednessLevel = fixednessMatch[1];
   }
-  
+
   // Extract problem solving approach
-  const approachMatch = analysis.match(/Problem-solving approach: (\w+(-\w+)?)/i);
+  const approachMatch = analysis.match(
+    /Problem-solving approach: (\w+(-\w+)?)/i
+  );
   if (approachMatch) {
     metrics.problemSolvingApproach = approachMatch[1];
   }
-  
+
   // Extract insight moments count
   const insightMatch = analysis.match(/(\d+)\s+clear moment\(s\) of insight/i);
   if (insightMatch) {
     metrics.insightMomentsObserved = parseInt(insightMatch[1]);
   }
-  
+
   // Extract environmental priming effectiveness (for variant B)
   if (variant === "B") {
-    const primingMatch = analysis.match(/environmental cues (were|seemed|appeared) (highly|moderately|slightly|not) effective/i);
+    const primingMatch = analysis.match(
+      /environmental cues (were|seemed|appeared) (highly|moderately|slightly|not) effective/i
+    );
     if (primingMatch) {
       const effectivenessLevel = primingMatch[2].toLowerCase();
       if (effectivenessLevel === "highly") {
@@ -203,27 +254,32 @@ function extractMetricsFromAnalysis(
       }
     }
   }
-  
+
   // Calculate experiment quality score based on various factors
-  const solvedRate = puzzleAttempts.filter(p => p.solutionFound).length / Math.max(1, puzzleAttempts.length);
+  const solvedRate =
+    puzzleAttempts.filter((p) => p.solutionFound).length /
+    Math.max(1, puzzleAttempts.length);
   if (solvedRate === 0) {
     metrics.experimentQualityScore = 4; // Too difficult
-  } else if (solvedRate === 1 && puzzleAttempts.every(p => p.attemptCount <= 1)) {
+  } else if (
+    solvedRate === 1 &&
+    puzzleAttempts.every((p) => p.attemptCount <= 1)
+  ) {
     metrics.experimentQualityScore = 5; // Too easy
   } else if (solvedRate > 0.3 && solvedRate < 0.8) {
     metrics.experimentQualityScore = 8; // Good balance
   }
-  
+
   return metrics;
 }
 
 // Count the types of commands used
 function countUniqueCommandTypes(userMessages: any[]): number {
   const commandTypes = new Set<string>();
-  
+
   userMessages.forEach((msg: any) => {
     const command = msg.content.toLowerCase().trim();
-    
+
     // Categorize commands
     if (command.startsWith("look")) commandTypes.add("look");
     if (command.startsWith("examine")) commandTypes.add("examine");
@@ -232,27 +288,27 @@ function countUniqueCommandTypes(userMessages: any[]): number {
     if (command.startsWith("go")) commandTypes.add("movement");
     if (command.startsWith("inventory")) commandTypes.add("inventory");
     if (command.startsWith("help")) commandTypes.add("help");
-    
+
     // Add directions as a movement type
     ["north", "south", "east", "west", "up", "down"].forEach((dir: string) => {
       if (command === dir) commandTypes.add("movement");
     });
   });
-  
+
   return commandTypes.size;
 }
 
 // Get the most frequently used commands
 function getTopCommands(userMessages: any[], limit = 3): string[] {
-  const commandCounts: {[key: string]: number} = {};
-  
+  const commandCounts: { [key: string]: number } = {};
+
   userMessages.forEach((msg: any) => {
     const command = msg.content.toLowerCase().trim();
     const commandType = command.split(" ")[0]; // Get first word
-    
+
     commandCounts[commandType] = (commandCounts[commandType] || 0) + 1;
   });
-  
+
   return Object.entries(commandCounts)
     .sort((a: [string, number], b: [string, number]) => b[1] - a[1])
     .slice(0, limit)
@@ -260,55 +316,68 @@ function getTopCommands(userMessages: any[], limit = 3): string[] {
 }
 
 // Calculate enhanced metrics for each puzzle attempt
-function calculateEnhancedPuzzleMetrics(puzzleAttempts: any[], interactions: any[]): any[] {
+function calculateEnhancedPuzzleMetrics(
+  puzzleAttempts: any[],
+  interactions: any[]
+): any[] {
   return puzzleAttempts.map((attempt: any) => {
     const puzzleId = attempt.puzzleId;
-    
+
     // Find all interactions related to this puzzle
-    const puzzleInteractions = interactions.filter((interaction: any) => 
-      interaction.puzzleContext?.activePuzzleId === puzzleId
+    const puzzleInteractions = interactions.filter(
+      (interaction: any) =>
+        interaction.puzzleContext?.activePuzzleId === puzzleId
     );
-    
+
     // Count conventional use attempts
-    const conventionalUseCount = puzzleInteractions.filter((interaction: any) => 
-      interaction.puzzleContext?.conventionalUse === true
+    const conventionalUseCount = puzzleInteractions.filter(
+      (interaction: any) => interaction.puzzleContext?.conventionalUse === true
     ).length;
-    
+
     // Count unconventional use attempts
-    const unconventionalUseCount = puzzleInteractions.filter((interaction: any) => 
-      interaction.puzzleContext?.isAttemptedSolution === true
+    const unconventionalUseCount = puzzleInteractions.filter(
+      (interaction: any) =>
+        interaction.puzzleContext?.isAttemptedSolution === true
     ).length;
-    
+
     // Calculate hesitation metrics
-    const hesitations = puzzleInteractions.flatMap((interaction: any) => 
-      interaction.metrics?.hesitations || []
+    const hesitations = puzzleInteractions.flatMap(
+      (interaction: any) => interaction.metrics?.hesitations || []
     );
-    
+
     const hesitationCount = hesitations.length;
-    const averageHesitationDuration = hesitationCount > 0 
-      ? hesitations.reduce((sum: number, h: any) => sum + h.duration, 0) / hesitationCount
-      : 0;
-    
+    const averageHesitationDuration =
+      hesitationCount > 0
+        ? hesitations.reduce((sum: number, h: any) => sum + h.duration, 0) /
+          hesitationCount
+        : 0;
+
     // Find first encounter time
-    const firstEncounter = puzzleInteractions.length > 0 
-      ? new Date(Math.min(...puzzleInteractions.map((i: any) => i.timestamp)))
-      : undefined;
-    
+    const firstEncounter =
+      puzzleInteractions.length > 0
+        ? new Date(Math.min(...puzzleInteractions.map((i: any) => i.timestamp)))
+        : undefined;
+
     // Find solved time if applicable
-    const solvedInteraction = puzzleInteractions.find((interaction: any) => 
-      interaction.puzzleContext?.isSolutionSuccess === true
+    const solvedInteraction = puzzleInteractions.find(
+      (interaction: any) =>
+        interaction.puzzleContext?.isSolutionSuccess === true
     );
-    const solvedTime = solvedInteraction ? new Date(solvedInteraction.timestamp) : undefined;
-    
+    const solvedTime = solvedInteraction
+      ? new Date(solvedInteraction.timestamp)
+      : undefined;
+
     // Find puzzle name and object if available
-    const puzzleName = puzzleInteractions.length > 0 
-      ? puzzleInteractions[0].puzzleContext?.puzzleName
-      : undefined;
-      
-    const fixedFunctionObject = puzzleInteractions.length > 0 
-      ? puzzleInteractions[0].puzzleContext?.fixedFunctionObject
-      : undefined;
-    
+    const puzzleName =
+      puzzleInteractions.length > 0
+        ? puzzleInteractions[0].puzzleContext?.puzzleName
+        : undefined;
+
+    const fixedFunctionObject =
+      puzzleInteractions.length > 0
+        ? puzzleInteractions[0].puzzleContext?.fixedFunctionObject
+        : undefined;
+
     return {
       ...attempt,
       puzzleName,
@@ -318,7 +387,7 @@ function calculateEnhancedPuzzleMetrics(puzzleAttempts: any[], interactions: any
       hesitationCount,
       averageHesitationDuration,
       firstEncounterTime: firstEncounter,
-      solvedTime
+      solvedTime,
     };
   });
 }

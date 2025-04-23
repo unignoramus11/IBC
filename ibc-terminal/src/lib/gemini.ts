@@ -1,3 +1,15 @@
+/**
+ * gemini.ts
+ * ---------
+ * Integrates with Google's Gemini 2.5 API for natural language processing and research analysis.
+ * Handles all AI-driven responses, world introductions, and session analysis for the IBC Terminal platform.
+ *
+ * Exports:
+ * - getGeminiResponse: Gets a response from Gemini for a user command
+ * - getAnalysisFromPrompt: Gets a research analysis from Gemini
+ * - getWorldIntroduction: Gets an immersive world introduction from Gemini
+ */
+
 import { GoogleGenAI } from "@google/genai";
 import { getSystemPrompt } from "../config/systemPrompts";
 import { getWorldData } from "./worldAllocation";
@@ -32,7 +44,15 @@ const convertToGeminiRole = (role: string): "user" | "model" => {
   return "model";
 };
 
-// Get response from Gemini API - NON-STREAMING VERSION
+/**
+ * Gets a response from Gemini for a user command and session context.
+ * @param deviceId - The device/session ID
+ * @param command - The user command
+ * @param worldId - The world index
+ * @param variant - The experimental/control variant
+ * @param history - The conversation history
+ * @returns An object with the response text and a forEach method for streaming compatibility
+ */
 export const getGeminiResponse = async (
   deviceId: string,
   command: string,
@@ -139,7 +159,15 @@ CRITICAL RESPONSE REQUIREMENTS:
   }
 };
 
-// Handle direct prompt analysis for session analysis
+/**
+ * Gets a research analysis from Gemini based on a prompt and session context.
+ * @param deviceId - The device/session ID
+ * @param prompt - The analysis prompt
+ * @param worldId - The world index
+ * @param variant - The experimental/control variant
+ * @param history - The conversation history
+ * @returns An object with the analysis text
+ */
 export const getAnalysisFromPrompt = async (
   deviceId: string,
   prompt: string,
@@ -157,7 +185,7 @@ export const getAnalysisFromPrompt = async (
 
   try {
     const ai = initializeGemini();
-    
+
     debugLog("Configuring analysis model", {
       model: "gemini-2.5-flash-preview-04-17",
       temperature: 0.5,
@@ -177,7 +205,7 @@ export const getAnalysisFromPrompt = async (
       message: prompt,
     });
     const endTime = performance.now();
-    
+
     debugLog("Received analysis response", {
       responseTime: `${(endTime - startTime).toFixed(2)}ms`,
       responseLength: response.text?.length || 0,
@@ -193,7 +221,12 @@ export const getAnalysisFromPrompt = async (
   }
 };
 
-// Get initial world intro from Gemini - NON-STREAMING VERSION
+/**
+ * Gets an immersive world introduction from Gemini for a given world and variant.
+ * @param worldId - The world index
+ * @param variant - The experimental/control variant
+ * @returns The introduction text for the world
+ */
 export const getWorldIntroduction = async (
   worldId: number,
   variant: "A" | "B"
@@ -222,7 +255,7 @@ export const getWorldIntroduction = async (
 
 FINAL CRITICAL INSTRUCTIONS:
 1. The player has NEVER seen this world before
-2. Start with a RICH, VIVID description of the initial scene
+2. Start with a RICH, VIVID description of the initial scene, as well as an introduction to the world and their situation and goals
 3. NEVER refer to the 'START_GAME' command in your response
 4. NEVER ask the player what kind of game they want to play
 5. NEVER list game options or game types

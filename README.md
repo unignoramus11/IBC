@@ -1,36 +1,42 @@
 # IBC Terminal: A Research Platform for Studying Functional Fixedness
 
 ## Table of Contents
-- [Executive Summary](#executive-summary)
-- [Project Purpose and Research Question](#project-purpose-and-research-question)
-- [Theoretical Background](#theoretical-background)
-- [Technical Architecture](#technical-architecture)
-  - [Core Technology Stack](#core-technology-stack)
-  - [Key Components](#key-components)
-- [Experiment Design](#experiment-design)
-  - [Worlds and Variants](#worlds-and-variants)
-  - [Control vs. Experimental Variants](#control-vs-experimental-variants)
-  - [Puzzle Design Principles](#puzzle-design-principles)
-- [Data Collection and Analysis](#data-collection-and-analysis)
-  - [Interaction Metrics](#interaction-metrics)
-  - [Session Analysis](#session-analysis)
-  - [Analysis Capabilities](#analysis-capabilities)
-- [Technical Implementation Details](#technical-implementation-details)
-  - [Device ID and World Allocation](#device-id-and-world-allocation)
-  - [Data Collection Implementation](#data-collection-implementation)
-  - [Gemini Integration and System Prompts](#gemini-integration-and-system-prompts)
-  - [MongoDB Integration](#mongodb-integration)
-- [Research Implications](#research-implications)
-- [Technical Advantages](#technical-advantages)
-- [Setup and Installation](#setup-and-installation)
-  - [Prerequisites](#prerequisites)
-  - [Configuration](#configuration)
-  - [Development Commands](#development-commands)
-- [Usage Guide](#usage-guide)
-  - [Player Instructions](#player-instructions)
-  - [Researcher Tools](#researcher-tools)
-- [Future Directions](#future-directions)
-- [References](#references)
+
+- [IBC Terminal: A Research Platform for Studying Functional Fixedness](#ibc-terminal-a-research-platform-for-studying-functional-fixedness)
+  - [Table of Contents](#table-of-contents)
+  - [Executive Summary](#executive-summary)
+  - [Project Purpose and Research Question](#project-purpose-and-research-question)
+  - [Theoretical Background](#theoretical-background)
+    - [Duncker's Paradigm](#dunckers-paradigm)
+    - [Extensions in Our Implementation](#extensions-in-our-implementation)
+    - [Relevant Literature](#relevant-literature)
+  - [Technical Architecture](#technical-architecture)
+    - [Core Technology Stack](#core-technology-stack)
+    - [Key Components](#key-components)
+  - [Experiment Design](#experiment-design)
+    - [Puzzle Design Principles](#puzzle-design-principles)
+    - [Worlds and Variants](#worlds-and-variants)
+    - [Control vs. Experimental Variants](#control-vs-experimental-variants)
+  - [Data Collection and Analysis](#data-collection-and-analysis)
+    - [Interaction Metrics](#interaction-metrics)
+    - [Session Analysis](#session-analysis)
+    - [Analysis Capabilities](#analysis-capabilities)
+  - [Technical Implementation Details](#technical-implementation-details)
+    - [Device ID and World Allocation](#device-id-and-world-allocation)
+    - [Data Collection Implementation](#data-collection-implementation)
+    - [Gemini Integration and System Prompts](#gemini-integration-and-system-prompts)
+  - [Research Implications](#research-implications)
+    - [MongoDB Integration](#mongodb-integration)
+  - [Setup and Installation](#setup-and-installation)
+    - [Prerequisites](#prerequisites)
+    - [Configuration](#configuration)
+    - [Development Commands](#development-commands)
+  - [Usage Guide](#usage-guide)
+    - [Player Instructions](#player-instructions)
+    - [Researcher Tools](#researcher-tools)
+  - [Technical Advantages](#technical-advantages)
+  - [Future Directions](#future-directions)
+  - [References](#references)
 
 ## Executive Summary
 
@@ -57,28 +63,29 @@ This project builds upon Karl Duncker's pioneering work on functional fixedness 
 Key concepts that inform our experimental design:
 
 ### Duncker's Paradigm
+
 - **Pre-utilization effect**: Objects previously used for their conventional function (Function 1) are more difficult to repurpose for an unconventional function (Function 2)
 - **Two main conditions**:
   - **w.p. (without pre-utilization)**: The object has not yet been used in the current problem
   - **a.p. (after pre-utilization)**: The object has been used in the problem already, but for a different purpose
 
 ### Extensions in Our Implementation
+
 1. **Environmental priming**: We extend Duncker's paradigm by adding environmental cues that demonstrate objects being used in unconventional ways (in variant B)
 2. **High-resolution metrics**: Unlike the original studies, we capture detailed behavioral data including hesitation patterns, corrections, and temporal dynamics
 3. **Narrative context**: We embed the functional fixedness challenges within coherent narratives that increase engagement while maintaining experimental control
 4. **Automated analysis**: We leverage AI to identify patterns in behavior consistent with functional fixedness and its overcoming
 
 ### Relevant Literature
-- Duncker, K. (1945). "On problem-solving." *Psychological Monographs*, 58(5)
-- Adamson, R. E. (1952). "Functional fixedness as related to problem solving." *Journal of Experimental Psychology*, 44(4), 288-291
-- McCaffrey, T. (2012). "Innovation relies on the obscure: A key to overcoming the classic functional fixedness problem." *Psychological Science*, 23(3), 215-218
-- German, T. P., & Defeyter, M. A. (2000). "Immunity to functional fixedness in young children." *Psychonomic Bulletin & Review*, 7(4), 707-712
+
+- Duncker, K. (1945). "On problem-solving." _Psychological Monographs_, 58(5)
+- Adamson, R. E. (1952). "Functional fixedness as related to problem solving." _Journal of Experimental Psychology_, 44(4), 288-291
+- McCaffrey, T. (2012). "Innovation relies on the obscure: A key to overcoming the classic functional fixedness problem." _Psychological Science_, 23(3), 215-218
+- German, T. P., & Defeyter, M. A. (2000). "Immunity to functional fixedness in young children." _Psychonomic Bulletin & Review_, 7(4), 707-712
 
 ## Technical Architecture
 
 ### Core Technology Stack
-
-![Architecture Diagram](https://mermaid.ink/img/pako:eNqFVE1v2zAM_SuETgVaBWkPO3XY1qxoe1oPw3bZbivQmmxrSKSNpBTI0P8-yvK32q4-JBL56OdHcSUWxgqiQoysD3wJvQHnFVjbQyMlWHoOeI-jgPxNOaiSl7Fj7GQPO0Qf-X-7hEO0_e_VY15ILXX5ZG3ZEuBR9YjKV-AcaWgMsWIBJa-XTKzAxZcjbSE82OuWtM1SilRWfBSFl1nBZVyiYomFLGNVMfO9AvIdXQQPBhKr4LwDRWFjYdGxVeXZ5PmKpKZu6gCKZBfRWQQfeuPU_sLGLfk9i_a7Z3rMwqJXDg-6vd1j2PqgDPJsrJrP4LV-AGvY2oAx7AGfGU3uGq62eVOhSWsv9CgBJ1N8YbOaJetyA5CezWdrtEbTdq_IpbkIZPFSIa5fj0k-KwUaSUf71V2gFDe8SfXbsf46uyiw5JBDHbxKXUk_K3gtBddA38wS_L6XSnUDrwfruVUdw5Jt3UtlaBE8O6mRuQm-GkUqGcZZ3nZSI8fXkSszKD0PnaTBGBKB4zjLOepQxuA6mVpXHAe4D1bPGDp_B3Pn22z5u2ePaHMXkJT_X6_k1n7G2-VaKcllmn9c0mUfVpzG8e-OO8lNpGrPzoxZcvn80uUFWh1pRfIg0PbF4sDYijpGO0QTnNlZJ23i2J_r8YwX3DuRb5NtR2TnO-PZoZGF8UBXwXsSN1zNWHGRRF_ydl5cFIkYuRNAQotC7OL7JImbJP5aZPdoWexE0jbJTVzcxsXicpms6xjB5O0mWdxstpubuL7ZLJq6-FbH9Vdov9T102Fb1N2fP1XsTXQ?type=png)
 
 The IBC Terminal is built using:
 
@@ -136,6 +143,7 @@ Each puzzle in the experimental environment follows specific design principles t
 5. **Narrative Integration**: The puzzle is embedded naturally in the story rather than presented as an abstract challenge
 
 Example puzzle structure from the Neo-Tokyo environment:
+
 - **Object**: ID Chip
 - **Conventional Function (F₁)**: Digital identification and access control
 - **Unconventional Function (F₂)**: Metal contacts used to bridge an electrical circuit
@@ -217,12 +225,14 @@ The system meticulously tracks and analyzes:
 After each session completes, the system generates a comprehensive analysis using advanced AI techniques. This analysis includes:
 
 1. **Functional Fixedness Assessment**:
+
    - Overall fixedness level (High/Moderate/Low)
    - Evidence of fixation on conventional object uses
    - Identification of insight moments
    - Problem-solving approach classification
 
 2. **Puzzle-Specific Metrics**:
+
    - Solution time for each puzzle
    - Attempts before solution
    - Conventional vs. unconventional use attempts
@@ -230,6 +240,7 @@ After each session completes, the system generates a comprehensive analysis usin
    - Alternative approaches tried
 
 3. **Experimental Condition Effectiveness**:
+
    - For variant B: Assessment of environmental priming effectiveness
    - Evidence of conceptual transfer between puzzles
    - Impact of environmental cues on problem-solving
@@ -327,11 +338,13 @@ The rich interaction data collected provides insight not just into whether parti
 The application uses MongoDB to store rich experimental data:
 
 1. **Sessions Collection**:
+
    - Stores complete session information including participant world assignment
    - Tracks session history with all commands and responses
    - Maintains puzzle state including attempts and completions
 
 2. **Interactions Collection**:
+
    - Captures detailed interaction data with millisecond-level timing
    - Stores keystroke patterns, hesitations, and corrections
    - Links interactions to specific puzzles and solution attempts
@@ -349,7 +362,7 @@ The database schema is designed for both immediate experimental insight and long
   _id: ObjectId("..."),
   deviceId: "user-xyz-123",
   worldId: 2,
-  variant: "B", 
+  variant: "B",
   startTime: ISODate("2025-04-23T12:34:56Z"),
   endTime: ISODate("2025-04-23T13:15:22Z"),
   puzzleAttempts: [
@@ -431,10 +444,12 @@ The game narrator (Gemini AI) responds to commands with narrative descriptions a
 Researchers can access collected data through:
 
 1. **MongoDB Direct Access**:
+
    - Connect to the MongoDB database to query raw data
    - Use MongoDB Compass or similar tools for data visualization
 
 2. **Data Export Utilities**:
+
    - Export session data in JSON/CSV formats
    - Generate comparative reports across participants
 
@@ -469,9 +484,9 @@ Potential extensions of this research platform include:
 
 ## References
 
-1. Duncker, K. (1945). On problem-solving. *Psychological Monographs*, 58(5).
-2. Adamson, R. E. (1952). Functional fixedness as related to problem solving. *Journal of Experimental Psychology*, 44(4), 288-291.
-3. German, T. P., & Defeyter, M. A. (2000). Immunity to functional fixedness in young children. *Psychonomic Bulletin & Review*, 7(4), 707-712.
-4. McCaffrey, T. (2012). Innovation relies on the obscure: A key to overcoming the classic functional fixedness problem. *Psychological Science*, 23(3), 215-218.
-5. Chrysikou, E. G., & Weisberg, R. W. (2005). Following the wrong footsteps: Fixation effects of pictorial examples in a design problem-solving task. *Journal of Experimental Psychology: Learning, Memory, and Cognition*, 31(5), 1134-1148.
-6. Ford, S., & Aggarwal, I. (2022). Creative problem solving: The role of examples, fixation, and incubation. *Annual Review of Psychology*, 73, 373-399.
+1. Duncker, K. (1945). On problem-solving. _Psychological Monographs_, 58(5).
+2. Adamson, R. E. (1952). Functional fixedness as related to problem solving. _Journal of Experimental Psychology_, 44(4), 288-291.
+3. German, T. P., & Defeyter, M. A. (2000). Immunity to functional fixedness in young children. _Psychonomic Bulletin & Review_, 7(4), 707-712.
+4. McCaffrey, T. (2012). Innovation relies on the obscure: A key to overcoming the classic functional fixedness problem. _Psychological Science_, 23(3), 215-218.
+5. Chrysikou, E. G., & Weisberg, R. W. (2005). Following the wrong footsteps: Fixation effects of pictorial examples in a design problem-solving task. _Journal of Experimental Psychology: Learning, Memory, and Cognition_, 31(5), 1134-1148.
+6. Ford, S., & Aggarwal, I. (2022). Creative problem solving: The role of examples, fixation, and incubation. _Annual Review of Psychology_, 73, 373-399.

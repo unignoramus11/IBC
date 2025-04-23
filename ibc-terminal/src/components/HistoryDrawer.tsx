@@ -1,3 +1,18 @@
+/**
+ * HistoryDrawer.tsx
+ * -----------------
+ * React component for displaying the command and response history in the IBC Terminal research platform.
+ * Used for reviewing participant interactions and supporting research on command sequence and recall.
+ *
+ * Exports:
+ * - HistoryDrawer: Drawer component for session history
+ *
+ * Props:
+ * - isOpen: Whether the drawer is visible
+ * - onClose: Function to close the drawer
+ * - messages: Array of message objects (role, content, timestamp)
+ */
+
 "use client";
 
 import React, { useEffect } from "react";
@@ -15,12 +30,21 @@ interface Message {
   timestamp: number;
 }
 
+/**
+ * Props for HistoryDrawer component.
+ */
 interface HistoryDrawerProps {
   isOpen: boolean;
   onClose: () => void;
   messages: Message[];
 }
 
+/**
+ * HistoryDrawer React component for displaying session command history.
+ * @param isOpen - Whether the drawer is open
+ * @param onClose - Handler to close the drawer
+ * @param messages - Array of message objects
+ */
 const HistoryDrawer: React.FC<HistoryDrawerProps> = ({
   isOpen,
   onClose,
