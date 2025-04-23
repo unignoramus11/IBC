@@ -255,7 +255,7 @@ export const getWorldIntroduction = async (
 
 FINAL CRITICAL INSTRUCTIONS:
 1. The player has NEVER seen this world before
-2. Start with a RICH, VIVID description of the initial scene, as well as an introduction to the world and their situation and goals
+2. Start with a RICH, VIVID description of the initial scene, as well as a SUBTLE HINT about the player's situation and goals
 3. NEVER refer to the 'START_GAME' command in your response
 4. NEVER ask the player what kind of game they want to play
 5. NEVER list game options or game types
