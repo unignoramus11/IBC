@@ -271,7 +271,8 @@ FINAL CRITICAL INSTRUCTIONS:
 8. REMEMBER this is specifically the "${worldData.name}" world - no other game options
 9. ALWAYS begin by informing the player about their current situation, their environment, and their goals WITHOUT telling them the solution.
 10. ENSURE the player is made aware of everything in the description "${worldData.description}".
-11. NEVER directly hint towards the solution object to the player. The player should find out which object to use and when themselves.`;
+11. NEVER directly hint towards the solution object to the player. The player should find out which object to use and when themselves.
+12. DONOT mention the solution object again and again. Mention it once, and then again ONLY when the user ASKS about it.`;
 
     debugLog("Created enhanced system prompt for world intro", {
       originalLength: systemPrompt.length,
