@@ -17,11 +17,11 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Terminal Adventure",
+  title: "Termature",
   description:
     "An interactive terminal-based adventure game for research on functional fixedness",
   metadataBase: new URL("https://ibc-rouge.vercel.app/"),
-  applicationName: "Terminal Adventure",
+  applicationName: "Termature",
   authors: [{ name: "IBC Research Team" }],
   keywords: [
     "terminal game",
@@ -42,22 +42,22 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     url: "https://terminal-adventure.example.com",
-    title: "Terminal Adventure",
+    title: "Termature",
     description:
       "Interactive terminal-based adventure game for cognitive research",
-    siteName: "Terminal Adventure",
+    siteName: "Termature",
     images: [
       {
         url: "/android-icon-192x192.png",
         width: 192,
         height: 192,
-        alt: "Terminal Adventure Logo",
+        alt: "Termature Logo",
       },
     ],
   },
   twitter: {
     card: "summary",
-    title: "Terminal Adventure",
+    title: "Termature",
     description:
       "Interactive terminal-based adventure game for cognitive research",
     images: ["/android-icon-192x192.png"],

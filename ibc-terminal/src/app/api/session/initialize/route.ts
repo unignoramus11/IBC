@@ -109,7 +109,7 @@ export async function POST(request: NextRequest) {
       } catch (error) {
         console.error("Error getting world introduction:", error);
         initialMessage =
-          'Welcome to the terminal adventure. Type "help" for available commands.';
+          'Welcome to the Termature. Type "help" for available commands.';
 
         // Add the fallback message to history
         await db.collection("sessions").updateOne(
