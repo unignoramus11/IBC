@@ -19,7 +19,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import CommandInput from "./CommandInput";
 import ResponseDisplay from "./ResponseDisplay";
-import HistoryDrawer from "./HistoryDrawer";
+import PrivacyPolicyConsent, { getCookie } from "./PrivacyPolicyConsent";
 import { trackUserInteraction } from "../lib/dataCollection";
 import { getWorldData } from "../lib/worldAllocation";
 
@@ -798,4 +798,19 @@ ${worldDescriptions
   );
 };
 
-export default Terminal;
+const TerminalWithConsent: React.FC<TerminalProps> = (props) => {
+  const [hasConsent, setHasConsent] = React.useState(false);
+
+  React.useEffect(() => {
+    if (getCookie("terminal_consent") === "true") {
+      setHasConsent(true);
+    }
+  }, []);
+
+  if (!hasConsent) {
+    return <PrivacyPolicyConsent onConsent={() => setHasConsent(true)} />;
+  }
+  return <Terminal {...props} />;
+};
+
+export default TerminalWithConsent;
