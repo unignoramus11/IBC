@@ -106,9 +106,13 @@ CRITICAL RESPONSE REQUIREMENTS:
 8. RESPOND directly to the player's commands as the immersive game narrator
 9. ASK the player to type "EXIT" once the game is complete
 10. NEVER directly hint towards the solution object, only give SUBTLE clues.
+11. DONOT accept statements like use <object>. ASK the player to describe what they want to do
+12. NEVER give away the solution to the player. The player should discover the solution themselves.
+13. DONOT allow the player to complete until ALL THE PUZZLES are solved. The PUZZLES were already mentioned before.
+
 ${
   worldData.name.endsWith("(SHORT)")
-    ? "11. Make this gameplay SHORT, while keeping it fun and engaging. Keep it WITHIN 5 MINUTES"
+    ? "14. Make this gameplay SHORT, while keeping it fun and engaging. Keep it WITHIN 5 MINUTES"
     : ""
 }`;
 
@@ -268,11 +272,21 @@ FINAL CRITICAL INSTRUCTIONS:
 5. NEVER list game options or game types
 6. DO act as the narrator/guide for this specific text adventure
 7. DO describe the player's initial surroundings in detail
-8. REMEMBER this is specifically the "${worldData.name}" world - no other game options
-9. ALWAYS begin by informing the player about their current situation, their environment, and their goals WITHOUT telling them the solution.
-10. ENSURE the player is made aware of everything in the description "${worldData.description}".
-11. NEVER directly hint towards the solution object to the player. The player should find out which object to use and when themselves.
-12. DONOT mention the solution object again and again. Mention it once, and then again ONLY when the user ASKS about it.`;
+8. DONOT accept statements like use <object>. ASK the player to describe what they want to do
+9. NEVER give away the solution to the player. The player should discover the solution themselves.
+10. REMEMBER this is specifically the "${
+        worldData.name
+      }" world - no other game options
+11. ALWAYS begin by informing the player about their current situation, their environment, and their goals WITHOUT telling them the solution.
+12. ENSURE the player is made aware of everything in the description "${
+        worldData.description
+      }".
+${
+  variant === "A"
+    ? `13. NEVER directly hint towards the solution object to the player. The player should find out which object to use and when themselves.
+14. DONOT mention the solution object again and again. Mention it once, and then again ONLY when the user ASKS about it.`
+    : "13. In the BEGINNING of the game, mention all the solution objects subtly being used in a way similar to the required way in the environment, SUBTLY."
+}`;
 
     debugLog("Created enhanced system prompt for world intro", {
       originalLength: systemPrompt.length,
@@ -292,27 +306,13 @@ FINAL CRITICAL INSTRUCTIONS:
       },
     });
 
-    // First initialize the context with a user message
-    debugLog("Sending initialization message to Gemini");
-    const initStartTime = performance.now();
-
-    await model.sendMessage({
-      message:
-        "I'm a new player in this world. Please describe my surroundings and situation in rich detail. I don't know anything about who I am, where I am, or what I'm doing here. Give full description, please.",
-    });
-
-    const initEndTime = performance.now();
-    debugLog("Initialization message processed", {
-      time: `${(initEndTime - initStartTime).toFixed(2)}ms`,
-    });
-
-    // Then send the START_GAME command to trigger the game intro
+    // Send the START_GAME command to trigger the game intro
     debugLog("Sending START_GAME command to generate world introduction");
     const startTime = performance.now();
 
     const response = await model.sendMessage({
       message:
-        "START_GAME - Begin the adventure and describe my initial surroundings vividly. Introduce me to the world and my situation, as I am completely new to this world. Also tell me my goals.",
+        "START_GAME - Begin the adventure and describe my initial surroundings vividly. Introduce me to the world and my situation, as I am completely new to this world. Also tell me my goals. Please describe my surroundings and situation in rich detail. I don't know anything about who I am, where I am, or what I'm doing here. Give full description, please.",
     });
 
     const endTime = performance.now();

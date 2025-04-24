@@ -492,7 +492,7 @@ const worlds: World[] = [
         controlVariant:
           "The red emergency door release button is visible behind a protective wire mesh high up on the wall near the exit. It looks just out of comfortable reach. A plastic ruler lies on a nearby table among some documents.",
         experimentalVariant:
-          "The red emergency door release button is visible behind a protective wire mesh high up on the wall near the exit. You notice scuff marks on the wall near the button, consistent with someone using a long, thin object to reach it. A plastic ruler lies on a nearby table.",
+          "The red emergency door release button is visible behind a protective wire mesh high up on the wall near the exit. You notice scuff marks on the wall near the button, consistent with someone using a long object to reach it. A plastic ruler lies on a nearby table.",
       },
     ],
     controlVariant: {
