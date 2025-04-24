@@ -27,7 +27,7 @@ interface PrivacyPolicyConsentProps {
   onConsent: () => void;
 }
 
-const PRIVACY_POLICY = `TERMINAL PRIVACY POLICY\n\nWhat data is collected?\n- All commands you enter in the terminal\n- Keystroke-level typing metrics (timing, corrections, hesitations)\n- Session duration and puzzle progress\n- Anonymous device/session ID\n\nHow is your data used?\n- For research on problem-solving and cognitive science\n- To analyze patterns in command usage and puzzle solving\n- To improve the terminal experience\n\nData is anonymous and cannot be traced back to you. No personal identifiers are collected.\n\nBy typing 'y' and pressing Enter, you consent to this data collection.\nYou must provide consent to proceed to the main menu.`;
+const PRIVACY_POLICY = `TERMINAL PRIVACY POLICY\n\nWhat data is collected?\n- All commands you enter in the terminal\n- Keystroke-level typing metrics (timing, corrections, hesitations)\n- Session duration and puzzle progress\n- Anonymous device/session ID\n\nHow is your data used?\n- For research on problem-solving and cognitive science\n- To analyze patterns in puzzle solving\n\nData is anonymous and cannot be traced back to you. No personal identifiers are collected.\n\nBy typing 'y' and pressing Enter, you consent to this data collection.\nYou must provide consent to proceed to the main menu.`;
 
 const PrivacyPolicyConsent: React.FC<PrivacyPolicyConsentProps> = ({
   onConsent,
