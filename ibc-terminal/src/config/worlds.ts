@@ -44,82 +44,45 @@ const worlds: World[] = [
   {
     id: 0,
     name: "Neo-Tokyo 2099",
-    description:
-      "A cyberpunk dystopia where technology is both ubiquitous and broken. The city is a maze of neon-lit streets, towering megacorporations, and shadowy back alleys. Most systems are automated but unreliable, requiring creative solutions to navigate the urban jungle.",
-    startingInventory: ["Personal Datapad", "ID Chip", "Credstick (empty)"],
+    description: "A cyberpunk city where you must infiltrate TechCorp's headquarters.",
+    startingInventory: ["Personal Datapad", "ID Chip", "Credstick"],
     mainObjectives: [
-      "Find a way into the restricted TechCorp building",
-      "Locate the prototype neural interface",
-      "Escape the city before the manhunt begins",
+      "Find the neural interface prototype in TechCorp"
     ],
     puzzles: [
       {
         id: "sliding-door",
-        name: "The Sliding Door",
-        description:
-          "A security door keeps closing automatically before you can get through.",
-        fixedFunctionObject:
-          "Datapad (normally used for communication/information)",
-        solution:
-          "Use the datapad as a physical wedge to keep the sliding door from closing",
-        controlVariant:
-          "Your smartpad shows a notification about low battery. The security door ahead keeps closing automatically before you can get through.",
-        experimentalVariant:
-          "You notice someone has jammed a thin smartpad under a door down the hallway to keep it from closing. Your own smartpad shows a notification about low battery. The security door ahead keeps closing automatically before you can get through.",
-      },
-      {
-        id: "electric-panel",
-        name: "The Circuit Breaker",
-        description:
-          "An exposed electrical panel needs to be bypassed to restore power to an elevator.",
-        fixedFunctionObject:
-          "ID Chip (normally used for identification/access)",
-        solution:
-          "Use the metal contacts on the ID chip to bridge a circuit in the electrical panel",
-        controlVariant:
-          "The elevator is offline. Nearby, an electrical panel has its cover removed, showing several disconnected circuits. Your ID chip glints in the dim light.",
-        experimentalVariant:
-          "The elevator is offline. Nearby, an electrical panel has its cover removed. You notice a maintenance worker across the hall using the metal contacts of their ID card to test electrical continuity between points. Your own ID chip glints in the dim light.",
+        name: "Security Door",
+        description: "A security door closes too quickly to get through.",
+        fixedFunctionObject: "Datapad (for communication)",
+        solution: "Use datapad as wedge to keep door open",
+        controlVariant: "The security door keeps closing automatically. Your datapad shows low battery.",
+        experimentalVariant: "Someone jammed a smartpad under a door to keep it open. Your security door keeps closing automatically."
       },
       {
         id: "biometric-scanner",
-        name: "The Biometric Lock",
-        description:
-          "A door requires a fingerprint scan, but you don't have authorized prints.",
-        fixedFunctionObject:
-          "Adhesive bandage (normally used for covering wounds)",
-        solution:
-          "Use the adhesive side of the bandage to lift a fingerprint from a surface and apply it to the scanner",
-        controlVariant:
-          "A door ahead requires a fingerprint scan for access. You notice a first aid kit on the wall with various supplies including adhesive bandages. The surface of the scanner is smudged with previous fingerprints.",
-        experimentalVariant:
-          "A door ahead requires a fingerprint scan for access. In a security video playing on a nearby screen, you see a thief using adhesive tape to lift fingerprints from a glass. You notice a first aid kit on the wall with various supplies including adhesive bandages. The surface of the scanner is smudged with previous fingerprints.",
-      },
+        name: "Fingerprint Lock",
+        description: "A fingerprint scanner blocks your path.",
+        fixedFunctionObject: "Adhesive bandage",
+        solution: "Lift fingerprint with bandage's adhesive side",
+        controlVariant: "A door requires fingerprint access. First aid kit nearby has bandages. Scanner surface has smudged prints.",
+        experimentalVariant: "A security video shows someone using tape to lift fingerprints. First aid kit nearby has bandages. Scanner has smudged prints."
+      }
     ],
     controlVariant: {
-      intro:
-        "Welcome to Neo-Tokyo 2099. The neon lights cast a harsh glow over the rain-slicked streets as you navigate through the crowded undercity. Your mission to infiltrate TechCorp begins now, with nothing but your wits and a few basic items to aid you.",
+      intro: "Infiltrate TechCorp and find the prototype neural interface. Use your limited resources wisely.",
       environmentDescriptions: {
-        street:
-          "The streets are crowded with people and autonomous drones. Holographic advertisements flicker overhead, while security cameras track movements at every corner.",
-        alley:
-          "A narrow alley between towering buildings. Discarded tech and refuse litter the ground. The walls are covered in graffiti and illegal augmentation advertisements.",
-        lobby:
-          "The corporate lobby is sterile and minimalist. Security drones patrol regularly, and automated systems track all visitors.",
-      },
+        street: "Crowded streets with security cameras watching your every move.",
+        lobby: "Corporate lobby with automated security systems."
+      }
     },
     experimentalVariant: {
-      intro:
-        "Welcome to Neo-Tokyo 2099. The neon lights cast a harsh glow over the rain-slicked streets as you navigate through the crowded undercity. Your mission to infiltrate TechCorp begins now, with nothing but your wits and a few basic items to aid you.",
+      intro: "Infiltrate TechCorp and find the prototype neural interface. Use your limited resources wisely.",
       environmentDescriptions: {
-        street:
-          "The streets are crowded with people and autonomous drones. A street vendor uses a credit chip to prop up their wobbly display table. Holographic advertisements flicker overhead.",
-        alley:
-          "A narrow alley between towering buildings. A maintenance worker uses an ID card to scrape gum off their shoe. Discarded tech and refuse litter the ground.",
-        lobby:
-          "The corporate lobby is sterile and minimalist. A visitor at the desk is pressing a piece of tape against a coffee cup, then carefully transferring something to their pocket.",
-      },
-    },
+        street: "A vendor props up a display with a credit chip. Security cameras everywhere.",
+        lobby: "Someone uses tape to lift fingerprints from a coffee cup. Security drones patrol."
+      }
+    }
   },
 
   // World 1: Forgotten Castle
