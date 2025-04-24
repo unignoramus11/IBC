@@ -105,7 +105,11 @@ CRITICAL RESPONSE REQUIREMENTS:
 7. ALWAYS respond immediately without asking for clarification about which game
 8. RESPOND directly to the player's commands as the immersive game narrator
 9. ASK the player to type "EXIT" once the game is complete
-${worldData.name.endsWith("(SHORT)") ? "10. Make this gameplay SHORT, while keeping it fun and engaging. Keep it WITHIN 5 MINUTES" : ""}`;
+${
+  worldData.name.endsWith("(SHORT)")
+    ? "10. Make this gameplay SHORT, while keeping it fun and engaging. Keep it WITHIN 5 MINUTES"
+    : ""
+}`;
 
     debugLog("Created enhanced system prompt", {
       originalLength: systemPrompt.length,
@@ -263,7 +267,9 @@ FINAL CRITICAL INSTRUCTIONS:
 5. NEVER list game options or game types
 6. DO act as the narrator/guide for this specific text adventure
 7. DO describe the player's initial surroundings in detail
-8. REMEMBER this is specifically the "${worldData.name}" world - no other game options`;
+8. REMEMBER this is specifically the "${worldData.name}" world - no other game options
+9. ALWAYS begin by informing the player about their current situation, their environment, and their goals WITHOUT telling them the solution.
+10. ENSURE the player is made aware of everything in the description "${worldData.description}".`;
 
     debugLog("Created enhanced system prompt for world intro", {
       originalLength: systemPrompt.length,
@@ -289,7 +295,7 @@ FINAL CRITICAL INSTRUCTIONS:
 
     await model.sendMessage({
       message:
-        "I'm a new player in this world. Please describe my surroundings and situation in rich detail.",
+        "I'm a new player in this world. Please describe my surroundings and situation in rich detail. I don't know anything about who I am, where I am, or what I'm doing here. Give full description, please.",
     });
 
     const initEndTime = performance.now();
@@ -303,7 +309,7 @@ FINAL CRITICAL INSTRUCTIONS:
 
     const response = await model.sendMessage({
       message:
-        "START_GAME - Begin the adventure and describe my initial surroundings vividly.",
+        "START_GAME - Begin the adventure and describe my initial surroundings vividly. Introduce me to the world and my situation, as I am completely new to this world. Also tell me my goals.",
     });
 
     const endTime = performance.now();
