@@ -6,7 +6,7 @@
  *
  * Exports:
  * - generateDeviceId: Returns a persistent unique device/session ID
- * - allocateWorld: Maps deviceId to worldId (0-4) and variant ('A' | 'B')
+ * - allocateWorld: Maps deviceId to worldId (0-6) and variant ('A' | 'B')
  */
 
 import { v4 as uuidv4 } from "uuid";
@@ -35,7 +35,7 @@ export const generateDeviceId = (): string => {
 /**
  * Deterministically allocates a world and variant for a given device ID.
  * @param deviceId - The device/session UUID
- * @returns An object with worldId (0-4) and variant ('A' | 'B')
+ * @returns An object with worldId (0-6) and variant ('A' | 'B')
  */
 export const allocateWorld = (
   deviceId: string
@@ -46,8 +46,8 @@ export const allocateWorld = (
     .split("")
     .reduce((sum, char) => sum + char.charCodeAt(0), 0);
 
-  // Allocate world ID (0-4) based on modulo 5
-  const worldId = idSum % 5;
+  // Allocate world ID (0-6) based on modulo 7
+  const worldId = idSum % 7;
 
   // Allocate variant (A or B) based on even/odd
   const variant = idSum % 2 === 0 ? "A" : "B";

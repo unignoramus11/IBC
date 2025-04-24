@@ -103,7 +103,9 @@ CRITICAL RESPONSE REQUIREMENTS:
 5. ALWAYS respond in plain text
 6. ALWAYS stay within the "${worldData.name}" world setting
 7. ALWAYS respond immediately without asking for clarification about which game
-8. RESPOND directly to the player's commands as the immersive game narrator`;
+8. RESPOND directly to the player's commands as the immersive game narrator
+9. ASK the player to type "EXIT" once the game is complete
+${worldData.name.endsWith("(SHORT)") ? "10. Make this gameplay SHORT, while keeping it fun and engaging. Keep it WITHIN 5 MINUTES" : ""}`;
 
     debugLog("Created enhanced system prompt", {
       originalLength: systemPrompt.length,

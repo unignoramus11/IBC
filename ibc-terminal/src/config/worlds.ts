@@ -449,6 +449,147 @@ const worlds: World[] = [
       },
     },
   },
+
+  // World 5: The Late Night Office (SHORT)
+  {
+    id: 5,
+    name: "The Late Night Office (SHORT)",
+    description:
+      "It's late, everyone else has gone home, and you find yourself accidentally locked inside the office building after hours. The main power is partially shut down for the night, leaving only emergency lights and locking most automated doors. You need to find a way out using only what's available around you.",
+    startingInventory: [
+      "Paperclip",
+      "Plastic Ruler (30cm)",
+      "Empty Coffee Mug",
+    ],
+    mainObjectives: [
+      "Find a way to bypass the locked main exit door",
+      "Escape the office building",
+    ],
+    puzzles: [
+      {
+        id: "key-retrieval",
+        name: "The Dropped Key",
+        description:
+          "You see the security override key needed for the main exit, but it has fallen through a narrow grate in the floor near the security desk. The gap is too small for your hand.",
+        fixedFunctionObject:
+          "Paperclip (normally used for holding papers together)",
+        solution:
+          "Unbend the paperclip to create a small hook, then carefully fish the key out through the grate.",
+        controlVariant:
+          "The override key rests tantalizingly just below the floor grate, visible but out of reach. Your fingers won't fit through the openings. A box of paperclips sits on the nearby desk.",
+        experimentalVariant:
+          "The override key rests tantalizingly just below the floor grate, visible but out of reach. You notice a bent paperclip lying near the grate, as if someone already tried (or succeeded) fishing something out. A box of fresh paperclips sits on the nearby desk.",
+      },
+      {
+        id: "button-press",
+        name: "The High Emergency Button",
+        description:
+          "The manual door release for the main exit is located behind a protective mesh high on the wall, slightly too high for you to reach comfortably and press effectively through the mesh.",
+        fixedFunctionObject:
+          "Plastic Ruler (normally used for measuring or drawing straight lines)",
+        solution:
+          "Use the end of the rigid plastic ruler to poke through the mesh and press the emergency release button.",
+        controlVariant:
+          "The red emergency door release button is visible behind a protective wire mesh high up on the wall near the exit. It looks just out of comfortable reach. A plastic ruler lies on a nearby table among some documents.",
+        experimentalVariant:
+          "The red emergency door release button is visible behind a protective wire mesh high up on the wall near the exit. You notice scuff marks on the wall near the button, consistent with someone using a long, thin object to reach it. A plastic ruler lies on a nearby table.",
+      },
+    ],
+    controlVariant: {
+      intro:
+        "The main lights click off, plunging the office into the dim glow of emergency lighting. You hear the heavy magnetic lock on the main door engage. You're locked in. Time to find a way out.",
+      environmentDescriptions: {
+        "office-floor":
+          "Desks are tidy or cluttered, monitors dark. Emergency lights cast long shadows. The air conditioning is off, making the room slightly stuffy.",
+        "security-area":
+          "A small desk near the main exit with a disabled security monitor. This is where the override key seems to have been dropped near a floor grate.",
+        "main-exit":
+          "The large glass main doors are firmly locked. A red emergency release button is mounted high on the wall next to it, behind protective mesh.",
+      },
+    },
+    experimentalVariant: {
+      intro:
+        "The main lights click off, plunging the office into the dim glow of emergency lighting. You hear the heavy magnetic lock on the main door engage. Earlier, you saw the janitor using a ruler to push a reset button on the thermostat and fiddling near a floor grate with a piece of wire. Maybe that's useful? You're locked in. Time to find a way out.",
+      environmentDescriptions: {
+        "office-floor":
+          "Desks are tidy or cluttered, monitors dark. Emergency lights cast long shadows. The air conditioning is off, making the room slightly stuffy. A coffee mug is wedged under a filing cabinet drawer to keep it slightly ajar.", // Hint for general unconventional use, not specific puzzle.
+        "security-area":
+          "A small desk near the main exit with a disabled security monitor. The override key has fallen through the grate. A bent paperclip lies nearby, as if used as a tool.", // Hint for paperclip puzzle
+        "main-exit":
+          "The large glass main doors are firmly locked. A red emergency release button is mounted high on the wall, behind protective mesh. There are faint scuff marks near the button, suggesting it's been poked with something long before.", // Hint for ruler puzzle
+      },
+    },
+  },
+
+  // World 6: Server Room Glitch (SHORT)
+  {
+    id: 6,
+    name: "Server Room Glitch (SHORT)",
+    description:
+      "You're pulling an all-nighter debugging code in the university's server room. Suddenly, a power fluctuation trips a security protocol. The main door locks with a heavy CLUNK, the network drops, and the main control terminal freezes, displaying only a cryptic kernel panic message. Emergency lights are on, but you're trapped. You need to find a manual override or restore minimal system control to escape.",
+    startingInventory: [
+      "Ethernet Cable (3m, unplugged)",
+      "Blank CD-R",
+      "USB Stick (FAT32 formatted, empty)",
+    ],
+    mainObjectives: [
+      "Find and activate the manual door release mechanism",
+      "Escape the server room before the backup power fails",
+    ],
+    puzzles: [
+      {
+        id: "contact-bridge",
+        name: "The Override Jumper",
+        description:
+          "You've located a dusty manual override panel near the door. The cover is off, revealing two contact points labelled 'DOOR_RELEASE_JMP'. They need to be momentarily connected to trigger the lock release, but they're slightly recessed and too far apart to bridge with just your fingers.",
+        fixedFunctionObject:
+          "Ethernet Cable (normally used for network connection)",
+        solution:
+          "Use the exposed metal pins on one of the RJ45 connectors of the Ethernet cable to carefully bridge the two contact points simultaneously.",
+        controlVariant:
+          "The manual override panel has two clearly marked contact points needing to be bridged. Your fingers can't quite reach both securely. A spare Ethernet cable lies coiled on a nearby rack shelf.",
+        experimentalVariant:
+          "The manual override panel has two clearly marked contact points. Taped next to it is a faded, hand-written note: 'PSU Test: Jumper pins 1+3 w/ wire/clip if console dead'. A spare Ethernet cable lies coiled nearby. You remember seeing a lab tech using the end of a network cable to test pin continuity on a breadboard last week.",
+      },
+      {
+        id: "optical-sensor-align",
+        name: "The Misaligned Sensor",
+        description:
+          "Part of the door release sequence seems to require confirming an optical beam sensor pair is aligned (perhaps a safety feature). One sensor, blinking faintly, is positioned inside the door frame, but its corresponding emitter or reflector target on the door itself is obstructed by a dangling bundle of poorly-managed cables you can't easily move.",
+        fixedFunctionObject: "Blank CD-R (normally used for data storage)",
+        solution:
+          "Use the reflective surface of the blank CD-R as a makeshift mirror. Angle it carefully to redirect the blinking light from the sensor back onto itself (or onto its intended target past the obstruction), simulating alignment.",
+        controlVariant:
+          "You trace the wiring from the override panel to an optical sensor inside the door frame, blinking weakly. Its line-of-sight to the door is blocked by a thick bundle of zip-tied cables. A spindle of blank CD-Rs sits on a dusty server case nearby.",
+        experimentalVariant:
+          "You trace the wiring to a blinking optical sensor, blocked by cables. You recall a lecture slide showing how fiber optic signals can be looped back for testing using reflective surfaces. Nearby, someone has used a shiny CD shard wedged into a server rack to reflect a status LED towards a monitoring camera. A spindle of blank CD-Rs sits on a dusty server case.",
+      },
+    ],
+    controlVariant: {
+      intro:
+        "ERROR: Kernel panic - not syncing: VFS: Unable to mount root fs on unknown-block(0,0). The terminal freezes. The door locks. The main lights go out. Just great. You're stuck in the server room's cold air hum.",
+      environmentDescriptions: {
+        "server-racks":
+          "Rows of humming server racks fill the room. Cable management ranges from neat to 'cable spaghetti'. Various components like spare drives, cables, and manuals are scattered on top of less-used machines.",
+        "control-terminal":
+          "The main KVM switch and monitor are useless, displaying the kernel panic. The keyboard is unresponsive.",
+        "door-area":
+          "The heavy metal door is sealed tight. Beside it is the manual override panel with its cover missing, and the optical sensor embedded in the frame.",
+      },
+    },
+    experimentalVariant: {
+      intro:
+        "ERROR: Kernel panic - not syncing... The terminal freezes, door locks, lights go out. Typical. You remember your OS professor joking about 'percussive maintenance' and using 'whatever conductive thing is handy' for hardware debug. Time to apply that creativity. You're stuck.",
+      environmentDescriptions: {
+        "server-racks":
+          "Rows of humming servers. Someone has propped open a server chassis lid using an old network card for better airflow. Cable management is a nightmare in places. You see a note taped to one rack: 'Diagnostic port pins: TX, RX, GND... Jumper RX-TX for loopback test'.", // Hints at unconventional use of pins/connectors & jury-rigging
+        "control-terminal":
+          "The main KVM is frozen. Someone left a Linux cheat sheet nearby showing diagrams for terminal commands.", // Flavor, less direct hint
+        "door-area":
+          "The heavy door is sealed. The override panel is exposed. You notice a faint scratch mark between the two contact points, like something metallic was dragged across them. The optical sensor blinks, partially obscured. A broken piece of a CD lies on the floor nearby.", // Hints for both puzzles
+      },
+    },
+  },
 ];
 
 /**

@@ -13,13 +13,13 @@ import { getWorldConfig } from "../config/worlds";
 
 /**
  * Returns the configuration data for a given world ID.
- * @param worldId - The world index (0-4)
+ * @param worldId - The world index (0-6)
  * @returns The world configuration object
  */
 export const getWorldData = (worldId: number) => {
   // Validate worldId is in valid range
-  if (worldId < 0 || worldId > 4) {
-    throw new Error(`Invalid world ID: ${worldId}. Must be between 0 and 4.`);
+  if (worldId < 0 || worldId > 6) {
+    throw new Error(`Invalid world ID: ${worldId}. Must be between 0 and 6.`);
   }
 
   return getWorldConfig(worldId);
@@ -27,7 +27,7 @@ export const getWorldData = (worldId: number) => {
 
 /**
  * Returns the variant-specific details for a world.
- * @param worldId - The world index (0-4)
+ * @param worldId - The world index (0-6)
  * @param variant - The experimental/control variant ('A' | 'B')
  * @returns The variant details object
  */

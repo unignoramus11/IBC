@@ -146,7 +146,7 @@ const Terminal: React.FC<TerminalProps> = ({ deviceId, worldId, variant }) => {
         try {
           // Prepare mystical descriptions for each world
           const worldDescriptions = [];
-          for (let i = 0; i < 5; i++) {
+          for (let i = 0; i < 7; i++) {
             try {
               const world = getWorldData(i);
               worldDescriptions.push({
@@ -168,19 +168,14 @@ const Terminal: React.FC<TerminalProps> = ({ deviceId, worldId, variant }) => {
           const selectionPrompt = `
 > Terminal initialized...
 > Connection established to the nexus of realities...
-> Five worlds await your presence, traveler.
+> Seven worlds await your presence, traveler.
 > Which dimension calls to your spirit?
 
 ${worldDescriptions
-  .map(
-    (world, index) =>
-      `[${index + 1}] ${world.name} - ${world.description.substring(0, 150)}${
-        world.description.length > 150 ? "..." : ""
-      }`
-  )
+  .map((world, index) => `[${index + 1}] ${world.name} - ${world.description}`)
   .join("\n\n")}
 
-> Type a number (1-5) to select your destination...`;
+> Type a number (1-7) to select your destination...`;
 
           debugLog("Setting world selection message", {
             promptLength: selectionPrompt.length,
@@ -437,7 +432,7 @@ ${worldDescriptions
       ]);
 
       // Check if input is a valid world number
-      if (isNaN(worldNumber) || worldNumber < 1 || worldNumber > 5) {
+      if (isNaN(worldNumber) || worldNumber < 1 || worldNumber > 7) {
         debugLog("Invalid world selection", {
           input: command,
           parsed: worldNumber,
@@ -447,7 +442,7 @@ ${worldDescriptions
           {
             role: "system",
             content:
-              "> Invalid selection. Please enter a number between 1 and 5.",
+              "> Invalid selection. Please enter a number between 1 and 7.",
             timestamp: Date.now(),
           },
         ]);
