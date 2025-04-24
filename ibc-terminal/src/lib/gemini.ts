@@ -105,9 +105,10 @@ CRITICAL RESPONSE REQUIREMENTS:
 7. ALWAYS respond immediately without asking for clarification about which game
 8. RESPOND directly to the player's commands as the immersive game narrator
 9. ASK the player to type "EXIT" once the game is complete
+10. NEVER directly hint towards the solution object, only give SUBTLE clues.
 ${
   worldData.name.endsWith("(SHORT)")
-    ? "10. Make this gameplay SHORT, while keeping it fun and engaging. Keep it WITHIN 5 MINUTES"
+    ? "11. Make this gameplay SHORT, while keeping it fun and engaging. Keep it WITHIN 5 MINUTES"
     : ""
 }`;
 
@@ -269,7 +270,8 @@ FINAL CRITICAL INSTRUCTIONS:
 7. DO describe the player's initial surroundings in detail
 8. REMEMBER this is specifically the "${worldData.name}" world - no other game options
 9. ALWAYS begin by informing the player about their current situation, their environment, and their goals WITHOUT telling them the solution.
-10. ENSURE the player is made aware of everything in the description "${worldData.description}".`;
+10. ENSURE the player is made aware of everything in the description "${worldData.description}".
+11. NEVER directly hint towards the solution object to the player. The player should find out which object to use and when themselves.`;
 
     debugLog("Created enhanced system prompt for world intro", {
       originalLength: systemPrompt.length,
