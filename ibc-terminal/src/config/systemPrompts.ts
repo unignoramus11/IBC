@@ -51,6 +51,11 @@ GAME STRUCTURE:
 DETAILED WORLD INFORMATION:
 ${worldData.description}
 
+PLOT POINTS:
+${worldData.plotPoints
+  .map((point, index) => `${index + 1}. ${point}`)
+  .join("\n")}
+
 VARIANT-SPECIFIC INTRO:
 ${variantBlock.intro}
 
@@ -86,6 +91,8 @@ ${worldData.puzzles
         puzzle.fixedFunctionObject
       } in an unconventional way: ${puzzle.solution}\n  Context to present: ${
         variant === "A" ? puzzle.controlVariant : puzzle.experimentalVariant
+      }\n  NARRATIVE JUSTIFICATION: ${
+        puzzle.narrativeJustification
       }\n  \n  TRACKING INSTRUCTIONS:\n  - Silently track ANY attempt that could be considered a solution attempt (keep a mental count)\n  - Note all alternative solutions they try before discovering the intended solution\n  - Observe if they express confusion or fixation on the conventional use of ${
         puzzle.fixedFunctionObject
       }\n  - Record the moment of insight when they solve the puzzle, and what triggered this insight\n  - Pay special attention to whether they mention the object's primary function as an obstacle\n`

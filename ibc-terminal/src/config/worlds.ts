@@ -19,6 +19,7 @@ export interface Puzzle {
   solution: string;
   controlVariant: string; // Variant A - standard context
   experimentalVariant: string; // Variant B - priming context
+  narrativeJustification: string;
 }
 
 export interface World {
@@ -27,6 +28,7 @@ export interface World {
   description: string;
   startingInventory: string[];
   mainObjectives: string[];
+  plotPoints: string[];
   puzzles: Puzzle[];
   controlVariant: {
     intro: string;
@@ -52,6 +54,20 @@ const worlds: World[] = [
       "Locate the prototype neural interface",
       "Escape the city before the manhunt begins",
     ],
+    plotPoints: [
+      "You are a renowned infiltration specialist hired by an anonymous client to extract a prototype neural interface from TechCorp's high-security R&D lab.",
+      "Your client claims the interface is being developed for mass surveillance and mind control, and needs to be exposed to the public.",
+      "Your original entry plan is compromised when police drones identify and disable your forged security credentials.",
+      "Your fixer contact, Riku, suggests an alternative route through the maintenance corridors in the building's lower levels.",
+      "After infiltrating the building, you discover encrypted messages suggesting your client may have connections to BlackSun, a notorious corporate terrorism group.",
+      "Security logs reveal multiple break-in attempts over the past week - someone else is also after the prototype.",
+      "You find research files indicating the neural interface is actually designed to help people with degenerative neural conditions regain motor function.",
+      "The lead scientist's personal logs express concerns about external pressure to weaponize the technology.",
+      "Your presence triggers a silent alarm, and security teams begin sweeping the building floor by floor.",
+      "The prototype is more advanced than expected, with an integrated tracking system that activates when removed from its containment field.",
+      "Building security initiates a full lockdown, sealing all conventional exits.",
+      "You must decide whether to complete your original mission or alert TechCorp about BlackSun's intentions before escaping the building.",
+    ],
     puzzles: [
       {
         id: "sliding-door",
@@ -66,6 +82,8 @@ const worlds: World[] = [
           "Your smartpad shows a notification about low battery. The security door ahead keeps closing automatically before you can get through.",
         experimentalVariant:
           "You notice someone has jammed a thin smartpad under a door down the hallway to keep it from closing. Your own smartpad shows a notification about low battery. The security door ahead keeps closing automatically before you can get through.",
+        narrativeJustification:
+          "This maintenance corridor provides the only unguarded access route to the TechCorp R&D floors. The security door was designed to close quickly to prevent unauthorized access during emergencies. Without finding a way to keep it open long enough to pass through, you'll be forced to use the main entrance where biometric scanners would immediately identify you as an unauthorized intruder and trigger a full security response.",
       },
       {
         id: "electric-panel",
@@ -80,6 +98,8 @@ const worlds: World[] = [
           "The elevator is offline. Nearby, an electrical panel has its cover removed, showing several disconnected circuits. Your ID chip glints in the dim light.",
         experimentalVariant:
           "The elevator is offline. Nearby, an electrical panel has its cover removed. You notice a maintenance worker across the hall using the metal contacts of their ID card to test electrical continuity between points. Your own ID chip glints in the dim light.",
+        narrativeJustification:
+          "Your silent alarm trigger has caused security to deactivate the main elevator to the R&D floor. This specific service elevator is not on the main security grid, but its power connection has been damaged in a recent maintenance accident. All stairwells are now being patrolled by armed guards. Without restoring power to this elevator, you cannot reach the laboratory level where the prototype is stored without being detected.",
       },
       {
         id: "biometric-scanner",
@@ -94,6 +114,8 @@ const worlds: World[] = [
           "A door ahead requires a fingerprint scan for access. You notice a first aid kit on the wall with various supplies including adhesive bandages. The surface of the scanner is smudged with previous fingerprints.",
         experimentalVariant:
           "A door ahead requires a fingerprint scan for access. In a security video playing on a nearby screen, you see a thief using adhesive tape to lift fingerprints from a glass. You notice a first aid kit on the wall with various supplies including adhesive bandages. The surface of the scanner is smudged with previous fingerprints.",
+        narrativeJustification:
+          "The prototype neural interface is stored in a high-security vault that requires Dr. Nakamura's fingerprint authorization. The lockdown has escalated security protocols, requiring in-person verification rather than just a security code. You've found Dr. Nakamura's coffee mug with clear fingerprints, but need a way to transfer them to the scanner. Without bypassing this biometric lock, the prototype remains inaccessible and your mission cannot be completed.",
       },
     ],
     controlVariant: {
@@ -134,6 +156,20 @@ const worlds: World[] = [
       "Discover what caused the castle's abandonment",
       "Escape before the mystical barriers seal permanently",
     ],
+    plotPoints: [
+      "You are a treasure hunter drawn to the abandoned castle by legends of a priceless royal crown with magical properties.",
+      "Local villagers warn that no one who enters the castle after sunset has ever returned.",
+      "Inside, you discover evidence that the royal family was conducting forbidden magical experiments centuries ago.",
+      "Ancient magical barriers activate at sunset, trapping you inside until you can find a way to disable them.",
+      "Journal fragments reveal the king sought an immortality ritual using a rare magical gem mounted in his crown.",
+      "The ritual went catastrophically wrong, trapping the royal family in a state between life and death.",
+      "Ghostly apparitions of castle servants and guards still perform their duties, unaware they are no longer living.",
+      "The magical barriers are growing stronger each day as ancient wards deteriorate, soon to become permanent.",
+      "The crown's gem appears to be the focus of the failed ritual and the key to deactivating the barriers.",
+      "You discover the king, still conscious but trapped in magical stasis, in a hidden chamber beneath the throne room.",
+      "The crown can either be used to complete the immortality ritual or to reverse it, freeing the trapped souls.",
+      "Ancient magical guardians will try to prevent interference with the ritual, believing they're protecting the royal family.",
+    ],
     puzzles: [
       {
         id: "ancient-lock",
@@ -147,6 +183,8 @@ const worlds: World[] = [
           "The heavy wooden door is held shut by an unusual lock with a star-shaped keyhole. Your dagger feels heavy in its sheath.",
         experimentalVariant:
           "The heavy wooden door is held shut by an unusual lock with a star-shaped keyhole. On a nearby table, you notice someone has left behind a knife with an ornately carved star-patterned hilt. Your own dagger has a similar hilt design.",
+        narrativeJustification:
+          "This door leads to the royal library containing the king's personal journals with crucial information about the immortality ritual and the crown's location. The castle's architect designed these specialized locks with uncommon patterns specifically to prevent unauthorized access to sensitive areas. Without the information in these journals, you will be unable to locate the hidden throne room entrance and will remain trapped when the barriers become permanent.",
       },
       {
         id: "broken-bridge",
@@ -160,6 +198,8 @@ const worlds: World[] = [
           "The stone bridge has collapsed, leaving a gap about three feet wide. Below, jagged rocks line a deep crevasse. A discarded shield leans against the wall nearby.",
         experimentalVariant:
           "The stone bridge has collapsed, leaving a gap about three feet wide. Below, jagged rocks line a deep crevasse. Nearby, you see a servant using a large serving tray as a makeshift platform to cross between two tables. A discarded shield leans against the wall.",
+        narrativeJustification:
+          "The collapsed bridge is the only path to the eastern tower containing the king's magical laboratory. This laboratory houses the focusing crystal needed to safely manipulate the crown's energies. Without this crystal, attempting to disable the castle's barriers would release chaotic magical energy, likely killing you and permanently binding the royal family's souls to the castle.",
       },
       {
         id: "sealed-room",
@@ -173,6 +213,8 @@ const worlds: World[] = [
           "The chamber door has no visible handle or lock. The smooth stone wall feels cool to the touch. Your unlit torch could provide some light in this dim corridor.",
         experimentalVariant:
           "The chamber door has no visible handle or lock. In an adjacent room, you notice how smoke from the fireplace reveals the subtle airflow through nearly invisible vents. Your unlit torch could provide some light in this dim corridor.",
+        narrativeJustification:
+          "This sealed chamber contains the royal court magician's notes detailing how to safely reverse the immortality ritual. The chamber was designed with a sophisticated magical air-regulation system instead of conventional locks to preserve the delicate scrolls inside. Without the magician's specific instructions, attempting to use the crown would likely trap you in the same state of suspended animation as the royal family.",
       },
     ],
     controlVariant: {
@@ -217,6 +259,20 @@ const worlds: World[] = [
       "Discover what happened to the station's crew",
       "Secure an escape pod before the station's orbit decays",
     ],
+    plotPoints: [
+      "You are a salvage engineer sent to recover valuable research data from Chronos Station after all contact was suddenly lost three months ago.",
+      "Upon arrival, you discover the station is experiencing localized temporal anomalies, with time flowing differently in various sections.",
+      "The station's orbit is decaying - you have limited time before it enters the atmosphere and burns up.",
+      "Emergency logs reveal the science team was conducting classified experiments with quantum entanglement and temporal physics.",
+      "The experiments created unpredictable temporal fields when containment protocols were breached during a power fluctuation.",
+      "Some crew members appear to have aged decades in minutes, while others seem to have de-aged to childhood.",
+      "Evidence suggests a rogue research faction deliberately sabotaged safety protocols to accelerate their experiments.",
+      "The quantum core powering the station is unstable and could cause catastrophic temporal collapse if it fails completely.",
+      "You discover some crew members may be trapped in time dilation fields throughout the station, appearing as frozen statues.",
+      "The station's AI is partially functional but fragmented across different temporal states, providing contradictory information.",
+      "The research data reveals potential applications for controlled temporal manipulation that could revolutionize medicine and space travel.",
+      "To escape, you must recover this data, stabilize the quantum core enough to power an escape pod, and navigate through increasingly severe temporal distortions.",
+    ],
     puzzles: [
       {
         id: "radiation-barrier",
@@ -230,6 +286,8 @@ const worlds: World[] = [
           "A warning light flashes in the corridor ahead, indicating dangerous radiation levels. Through the viewport, you can see a beam of energy cutting across the passage. The galley nearby contains various items including metal food trays.",
         experimentalVariant:
           "A warning light flashes in the corridor ahead, indicating dangerous radiation levels. Through the viewport, you can see a beam of energy cutting across the passage. In a nearby lab, a scientist's log shows diagrams of using reflective surfaces to redirect similar radiation beams. The galley contains various items including metal food trays.",
+        narrativeJustification:
+          "The radiation-flooded corridor is the only access route to the quantum physics lab containing the station's primary data cores. The radiation is emanating from a damaged temporal experiment, creating a focused beam of exotic particles that would cause severe cellular degradation upon contact. Without retrieving the research data from the lab, you cannot understand how to stabilize the quantum core or safely navigate the increasing temporal distortions to reach the escape pods.",
       },
       {
         id: "sealed-airlock",
@@ -244,6 +302,8 @@ const worlds: World[] = [
           "The airlock door remains sealed, with the control panel flashing red. A small access panel nearby is tightly shut. Your access card doesn't seem to work with any of the operational readers.",
         experimentalVariant:
           "The airlock door remains sealed, with the control panel flashing red. Nearby, you see a maintenance worker using a thin piece of metal to pry open a similar panel. Your access card doesn't seem to work with any of the operational readers.",
+        narrativeJustification:
+          "This airlock connects to the station's central hub where the main systems can be accessed. The station's automatic quarantine protocols have sealed this critical passage after detecting the temporal anomalies. Without reaching the central terminal, you cannot redirect power to the escape pod bay or access the navigation systems needed for a safe departure. The override panel was designed to be accessible only to maintenance crew in emergency situations.",
       },
       {
         id: "quantum-lock",
@@ -258,6 +318,8 @@ const worlds: World[] = [
           "The security door is locked with a sophisticated quantum mechanism. The authentication device is clearly damaged. A portable holographic display sits on a nearby workstation, still functional.",
         experimentalVariant:
           "The security door is locked with a sophisticated quantum mechanism. The authentication device is clearly damaged. A research note on a nearby workstation discusses how holographic displays operate using similar quantum principles to the security system. A portable holographic display sits nearby, still functional.",
+        narrativeJustification:
+          "This security door protects the escape pod bay, which contains the only functional evacuation vehicle. The quantum authentication system was designed to prevent unauthorized evacuation during emergencies, requiring quantum-state matching that conventional hacking cannot bypass. With the system damaged by temporal fluctuations, you must find a way to simulate the quantum signature of authorized personnel or be trapped on the station as its orbit continues to decay toward atmospheric entry.",
       },
     ],
     controlVariant: {
@@ -298,6 +360,20 @@ const worlds: World[] = [
       "Recover the underground civilization's historical records",
       "Find a way back to the surface before cave-ins block the route",
     ],
+    plotPoints: [
+      "You are an archaeologist who discovered a hidden entrance to a vast underground complex while exploring a remote mountain region.",
+      "Shortly after your descent, a cave-in blocks your entry point, forcing you to find another way back to the surface.",
+      "The caverns reveal an advanced civilization that retreated underground thousands of years ago during some global catastrophe.",
+      "Their technology appears to be based on crystal manipulation, sound harmonics, and other principles that differ from modern science.",
+      "You discover the civilization developed an extensive underground transportation network that might lead to other surface exits.",
+      "Strange glyphs and images throughout the complex tell the story of the civilization's decline and ultimate fate.",
+      "The transport system and most other technology lie dormant, but evidence suggests they can be reactivated with the proper sequences.",
+      "As you explore deeper, you find signs that the civilization was researching interdimensional travel as an escape from their subterranean existence.",
+      "Journal fragments indicate successful experiments, suggesting the civilization didn't die out but escaped to another dimension or reality.",
+      "A central archive chamber contains their complete historical and technological records, including detailed maps of all surface access points.",
+      "Periodic tremors indicate the cavern system is becoming increasingly unstable, with some passages already collapsed.",
+      "You must activate the transportation network to reach the archive chamber and find a viable exit route before the entire complex becomes your tomb.",
+    ],
     puzzles: [
       {
         id: "crystal-lock",
@@ -311,6 +387,8 @@ const worlds: World[] = [
           "The stone door is inset with crystalline receptors that seem to respond to light. Your lantern's beam alone doesn't trigger any reaction. You have an empty water bottle in your pack.",
         experimentalVariant:
           "The stone door is inset with crystalline receptors that seem to respond to light. In a nearby chamber, you notice how water droplets from the ceiling are creating rainbow patterns when they catch the light. You have an empty water bottle in your pack.",
+        narrativeJustification:
+          "This crystal-locked door is the entrance to the control chamber for the ancient transportation network. The civilization's security systems were designed to respond to specific light patterns, rather than mechanical keys or electronic signals. Without accessing this control room, you cannot activate the dormant transport platforms that are your only means of reaching distant chambers and potential exit points before the unstable caverns completely collapse.",
       },
       {
         id: "sound-canyon",
@@ -324,6 +402,8 @@ const worlds: World[] = [
           "A deep chasm cuts across the passage. Unusual rock formations line the walls, and you notice faint harmonic vibrations in the air. You have an empty metal container in your pack.",
         experimentalVariant:
           "A deep chasm cuts across the passage. Nearby, water dripping onto different rock formations creates musical tones that cause small stone platforms to temporarily extend. You have an empty metal container in your pack.",
+        narrativeJustification:
+          "The sonic chasm separates you from the civilization's historical archives that contain the activation codes and maps for the transportation network. The sound-responsive bridge was designed to only materialize when receiving specific harmonic frequencies that were common knowledge to the civilization's citizens. Without creating these precise frequencies to manifest the bridge, the archives remain inaccessible, and with them, your knowledge of potential exit routes to the surface.",
       },
       {
         id: "pressure-plates",
@@ -337,6 +417,8 @@ const worlds: World[] = [
           "The passage ahead has several stone plates on the floor that sink when stepped on, but rise again when weight is removed. Your backpack contains a notebook with blank pages.",
         experimentalVariant:
           "The passage ahead has several stone plates on the floor that sink when stepped on, but rise again when weight is removed. In a nearby room, you notice how someone has folded parchment into structured shapes to hold small objects above water. Your backpack contains a notebook with blank pages.",
+        narrativeJustification:
+          "This pressure plate system guards the entrance to the power core chamber that houses the primary energy source for the entire underground complex. The ancient engineers designed this security measure to ensure that only a group of authorized individuals working together could access this crucial facility. Without activating all plates simultaneously to unlock the door, you cannot reach the power core to redirect energy to the transportation system that offers your only escape route from the collapsing cave system.",
       },
     ],
     controlVariant: {
@@ -381,6 +463,20 @@ const worlds: World[] = [
       "Locate the Nexus of Consciousness that controls the realm",
       "Find a way to return to your own dimension before your mind merges with the Ethereal Planes",
     ],
+    plotPoints: [
+      "You were a researcher testing an experimental consciousness-transfer device when a power surge propelled your mind into the Ethereal Planes.",
+      "Your physical body remains in your lab, but your consciousness is now adrift in this dimension that exists at the intersection of all conscious minds.",
+      "Time works differently here - what feels like hours may be minutes in the physical world, but prolonged disconnection risks permanent separation from your body.",
+      "The realm responds directly to thoughts and emotions, creating both obstacles and opportunities based on your mental state.",
+      "Other conscious entities wander the planes - some are fellow travelers, others are native thought-forms, and some are lost souls who have forgotten their physical origins.",
+      "You encounter fragments of your own memories taking physical form, some distorted by the realm's strange properties.",
+      "Ancient entities known as Thought Architects maintain the boundaries between different regions of the Ethereal Planes.",
+      "As time passes, you feel your sense of self beginning to fragment, with memories and personality traits becoming harder to hold together.",
+      "You learn of the Nexus of Consciousness, a central point from which a deliberate return to your physical form might be possible.",
+      "Strange entities are attracted to your clearly foreign consciousness, some seeking to use you as a vessel to escape into the physical world.",
+      "The Reality Anchor you've brought helps maintain your coherence, but its power is limited and diminishing.",
+      "You must navigate this maze of consciousness, overcome mental barriers, and reach the Nexus before your identity dissolves completely into the collective mindscape.",
+    ],
     puzzles: [
       {
         id: "thought-barrier",
@@ -394,6 +490,8 @@ const worlds: World[] = [
           "A churning wall of dark energy blocks the path ahead, growing stronger when you feel uncertainty. It seems to feed on negative emotions. You have a small hand mirror in your pack.",
         experimentalVariant:
           "A churning wall of dark energy blocks the path ahead. Nearby, you notice how a reflective pool is causing ripples in a similar energy formation, seemingly confusing its structure. You have a small hand mirror in your pack.",
+        narrativeJustification:
+          "The barrier of swirling negative energy manifested from your own subconscious doubts and fears, directly blocking the path to the Memory Sanctum. Without accessing the Sanctum, you cannot recover critical fragments of your personal memories that are dissolving into the Ethereal Planes. As these memories fragment, your sense of self weakens, accelerating the merging of your consciousness with the realm. The barrier grows stronger in response to your negative emotions, making conventional passage impossible.",
       },
       {
         id: "dream-lock",
@@ -408,6 +506,8 @@ const worlds: World[] = [
           "The ornate door appears to be made of solidified memories, with a receptacle that pulses with expectation. Fragments of memory float through the air like motes of dust. You have an empty emotion vial that could hold something.",
         experimentalVariant:
           "The ornate door appears to be made of solidified memories. Nearby, a dreaming entity is using a bubble-like container to collect floating memory fragments. You notice how the collected memories interact with similar doors. You have an empty emotion vial that could hold something.",
+        narrativeJustification:
+          "This memory-sealed door protects the Anchor Forge, a critical location where you can strengthen your Reality Anchor to prevent further merging with the realm. The door is designed to only admit those who can demonstrate mastery over memory essence, a basic skill for native denizens of this plane. Without accessing the Anchor Forge to reinforce your tether to physical reality, your connection to your body will continue to weaken until return becomes impossible.",
       },
       {
         id: "reality-flux",
@@ -422,6 +522,8 @@ const worlds: World[] = [
           "The path ahead repeatedly fractures into a chasm of swirling colors and void, its width changing unpredictably. Your reality anchor helps keep you from being affected by the dimensional shifts around you.",
         experimentalVariant:
           "The path ahead repeatedly fractures into a chasm of swirling colors and void. In another area, you notice a traveler placing a similar anchor device on an unstable object rather than themselves, causing the object to maintain a consistent state. Your reality anchor helps keep you from being affected by the dimensional shifts.",
+        narrativeJustification:
+          "The reality flux chasm separates you from the Nexus of Consciousness, the central point from which a return to physical reality can be initiated. The chasm's constant shifting represents the unstable boundary between different mental realms, making conventional crossing impossible. Without reaching the Nexus soon, your physical body will begin to deteriorate from prolonged disconnection from its consciousness, eventually resulting in permanent separation.",
       },
     ],
     controlVariant: {
@@ -465,6 +567,20 @@ const worlds: World[] = [
       "Find a way to bypass the locked main exit door",
       "Escape the office building",
     ],
+    plotPoints: [
+      "You stayed late working on a critical presentation due tomorrow morning, losing track of time until the building's automated systems initiated night mode.",
+      "The security team has already completed their final rounds and left for the night, with no one scheduled to return until 6 AM.",
+      "Your phone battery is dead, and the office phones require a security code after-hours that you don't know.",
+      "The building's climate control system has switched to energy-saving mode, making it increasingly uncomfortable as the night progresses.",
+      "You have an important family commitment early tomorrow morning that you absolutely cannot miss.",
+      "During new employee orientation, you vaguely remember hearing about emergency exit procedures but didn't pay close attention.",
+      "The security system includes manual override mechanisms for use during power failures or emergencies.",
+      "You notice the cleaning staff left some of their equipment behind, suggesting they left in a hurry.",
+      "A security override key appears to have been dropped near a floor grate by the last person to leave.",
+      "Your employee handbook mentioned that the main doors have both electronic locks and a manual emergency release system.",
+      "The building's security cameras are still active, meaning your actions will be recorded but not actively monitored.",
+      "Finding creative solutions using ordinary office supplies is your only hope for escaping before morning.",
+    ],
     puzzles: [
       {
         id: "key-retrieval",
@@ -479,6 +595,8 @@ const worlds: World[] = [
           "The override key rests tantalizingly just below the floor grate, visible but out of reach. Your fingers won't fit through the openings. A box of paperclips sits on the nearby desk.",
         experimentalVariant:
           "The override key rests tantalizingly just below the floor grate, visible but out of reach. You notice a bent paperclip lying near the grate, as if someone already tried (or succeeded) fishing something out. A box of fresh paperclips sits on the nearby desk.",
+        narrativeJustification:
+          "The security override key is essential for deactivating the electronic lock system on the main exit doors. According to the emergency procedures posted near the security desk, this physical key must be inserted into the override slot to put the system into manual mode before the emergency release can function. Without retrieving this key, the electronic locks will remain engaged regardless of other actions you take. Alternative emergency exits would trigger an automatic alert to the security company and police, potentially resulting in embarrassment and disciplinary action.",
       },
       {
         id: "button-press",
@@ -493,6 +611,8 @@ const worlds: World[] = [
           "The red emergency door release button is visible behind a protective wire mesh high up on the wall near the exit. It looks just out of comfortable reach. A plastic ruler lies on a nearby table among some documents.",
         experimentalVariant:
           "The red emergency door release button is visible behind a protective wire mesh high up on the wall near the exit. You notice scuff marks on the wall near the button, consistent with someone using a long object to reach it. A plastic ruler lies on a nearby table.",
+        narrativeJustification:
+          "After inserting the override key and turning the system to manual mode, you still need to activate the manual release button to disengage the physical locks. The button was intentionally placed high and behind protective mesh to prevent accidental or unauthorized activation during normal business hours. Without pressing this button, the mechanical locks will remain engaged even though you've disabled the electronic security system with the override key. This two-factor system ensures that both a physical key and deliberate action are required for after-hours exit.",
       },
     ],
     controlVariant: {
@@ -536,6 +656,20 @@ const worlds: World[] = [
       "Find and activate the manual door release mechanism",
       "Escape the server room before the backup power fails",
     ],
+    plotPoints: [
+      "You were authorized to use the server room after hours to complete critical debugging on your research project's code.",
+      "A sudden power surge caused the main systems to crash and triggered the automatic security lockdown protocol.",
+      "The server room door has a heavy-duty electromagnetic lock that defaults to 'secured' during power interruptions.",
+      "Backup power has activated, but it's limited to essential systems only and won't last indefinitely.",
+      "The control terminal is completely unresponsive, showing only a kernel panic error message.",
+      "Your student access card doesn't have the security clearance to override the door lock in emergency mode.",
+      "There's no cell service in the server room's Faraday cage-like environment, and the landline phone requires a network connection.",
+      "You remember seeing a manual override panel somewhere near the door during the facility tour, but never paid much attention to it.",
+      "The university's IT staff won't return until morning, and campus security doesn't routinely check the server room overnight.",
+      "The ventilation system has switched to minimal operation, meaning the heat from the still-running servers will gradually make the room uncomfortably warm.",
+      "As your eyes adjust to the emergency lighting, you notice details about the room's safety systems you hadn't previously observed.",
+      "You'll need to apply your technical knowledge creatively using whatever items are available to overcome the electronic and physical barriers to escape.",
+    ],
     puzzles: [
       {
         id: "contact-bridge",
@@ -550,6 +684,8 @@ const worlds: World[] = [
           "The manual override panel has two clearly marked contact points needing to be bridged. Your fingers can't quite reach both securely. A spare Ethernet cable lies coiled on a nearby rack shelf.",
         experimentalVariant:
           "The manual override panel has two clearly marked contact points. Taped next to it is a faded, hand-written note: 'PSU Test: Jumper pins 1+3 w/ wire/clip if console dead'. A spare Ethernet cable lies coiled nearby. You remember seeing a lab tech using the end of a network cable to test pin continuity on a breadboard last week.",
+        narrativeJustification:
+          "The door release override circuit was designed as a failsafe that bypasses the electronic security system during emergencies. This mechanical circuit requires completing an electrical connection between two contact points to momentarily interrupt the power to the electromagnetic lock. Without activating this override, the heavy-duty security door will remain sealed until power and systems are fully restored or authorized personnel arrive with security keys. The contact points were intentionally designed to require a conductive tool rather than just fingers to prevent accidental activation.",
       },
       {
         id: "optical-sensor-align",
@@ -563,6 +699,8 @@ const worlds: World[] = [
           "You trace the wiring from the override panel to an optical sensor inside the door frame, blinking weakly. Its line-of-sight to the door is blocked by a thick bundle of zip-tied cables. A spindle of blank CD-Rs sits on a dusty server case nearby.",
         experimentalVariant:
           "You trace the wiring to a blinking optical sensor, blocked by cables. You recall a lecture slide showing how fiber optic signals can be looped back for testing using reflective surfaces. Nearby, someone has used a shiny CD shard wedged into a server rack to reflect a status LED towards a monitoring camera. A spindle of blank CD-Rs sits on a dusty server case.",
+        narrativeJustification:
+          "This optical sensor system is a safety feature designed to prevent the door from closing or opening when obstructions are present in the doorway. Even after bridging the manual override contacts, the door will not unseal unless the system confirms a clear path exists. The sensor requires line-of-sight with its paired receiver to complete the safety circuit, but the poorly managed cable bundle is blocking this connection. Without satisfying this safety check, the override system remains incomplete and inoperative despite successfully bridging the electrical contacts.",
       },
     ],
     controlVariant: {
