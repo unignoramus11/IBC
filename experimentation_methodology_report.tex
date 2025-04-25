@@ -1,0 +1,263 @@
+\documentclass{article}
+\usepackage{geometry}
+\usepackage{amsmath}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{times}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{url}
+\usepackage{listings} % For code formatting if needed
+\usepackage{booktabs} % For tables
+
+\geometry{a4paper, margin=1in}
+
+\title{Experimentation Methodology Report: IBC Terminal Functional Fixedness Study}
+\author{
+    Team I3 \\
+    Mohit Kumar Singh \\
+    Akmal Ali \\
+    Rohan Kumar
+}
+\date{April 24, 2025}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+This report details the experimental methodology employed in the IBC Terminal research platform. The platform, developed as a text-based adventure game, investigates the cognitive phenomenon of functional fixedness. It utilizes a between-subjects design, presenting participants with either a control or an experimental (priming) variant of specific puzzle scenarios embedded within different game worlds. The study collects detailed interaction data, including command inputs, AI responses, keystroke dynamics (timing, hesitations, corrections), and puzzle-solving metrics (attempts, time to solution, success rates). Data is stored locally and uploaded to a backend MongoDB database for analysis. An AI-driven analysis component further evaluates session data to provide qualitative and quantitative insights into functional fixedness patterns. The primary goal is to assess the impact of environmental priming cues on participants' ability to overcome functional fixedness during problem-solving tasks.
+\end{abstract}
+
+\section{Introduction}
+
+Functional fixedness, a concept originating from Gestalt psychology, describes a cognitive bias limiting individuals to using objects only in their traditional or most common way (Duncker, 1945). This bias can hinder creative problem-solving when a novel situation requires using an object unconventionally. The IBC Terminal research platform was developed to study this phenomenon in an engaging, interactive environment.
+
+The platform presents text-based adventure scenarios where players must solve puzzles. Certain puzzles are specifically designed around objects prone to functional fixedness, requiring players to devise unconventional uses for these objects to progress.
+
+\textbf{Research Question:} How does environmental priming, subtly suggesting unconventional object uses, affect a participant's ability to overcome functional fixedness when solving puzzles in a text-based adventure game?
+
+\textbf{Hypothesis (Inferred):} Participants exposed to environmental priming cues related to unconventional object uses (Experimental Variant B) will demonstrate reduced functional fixedness compared to participants in the control condition (Control Variant A). This will manifest as faster puzzle solution times, fewer incorrect attempts, and a higher frequency of commands attempting unconventional object uses for the target puzzles.
+
+\textbf{Team Roles:}
+\begin{itemize}
+    \item \textbf{Game Development:} Mohit Kumar Singh
+    \item \textbf{Data Analysis \& Presentation:} Akmal Ali, Rohan Kumar
+    \item \textbf{Experiment Conduction:} Akmal Ali, Mohit Kumar Singh, Rohan Kumar
+\end{itemize}
+
+\section{Method}
+
+\subsection{Participants}
+Participants are users interacting with the IBC Terminal web application. (Note: Specific recruitment methods, demographics, and compensation details are not detailed within the codebase and are assumed to be managed externally). Each participant session is associated with a unique device identifier (`deviceId`) generated and stored locally (\path{src/lib/deviceId.ts}). Consent for data collection is implicitly managed via the user interface (e.g., \path{src/components/PrivacyPolicyConsent.tsx}).
+
+\subsection{Design}
+The study employs a \textbf{between-subjects experimental design}. Participants are assigned to one of two conditions for each world they play:
+
+\begin{itemize}
+    \item \textbf{Independent Variable:} Experimental Condition (Variant)
+        \begin{itemize}
+            \item \textbf{Variant A (Control):} Standard puzzle and environment descriptions.
+            \item \textbf{Variant B (Experimental):} Environment descriptions include subtle priming cues suggesting unconventional uses for objects, sometimes related to the puzzle's fixed-function object (\path{src/config/worlds.ts}).
+        \end{itemize}
+    \item \textbf{Dependent Variables:} A range of quantitative and qualitative metrics is collected to assess functional fixedness and problem-solving behavior (\path{src/lib/dataCollection.ts}, \path{src/models/Interaction.ts}):
+        \begin{itemize}
+            \item \textbf{Puzzle Performance:}
+                \begin{itemize}
+                    \item Solution Success Rate (Solved / Discovered)
+                    \item Time to Solution (ms, from first puzzle interaction to solution)
+                    \item Number of Solution Attempts
+                    \item Number of Incorrect Attempts before Solution
+                \end{itemize}
+            \item \textbf{Interaction Metrics:}
+                \begin{itemize}
+                    \item Command Input Duration (ms)
+                    \item Keystroke Count per Command
+                    \item Correction Count (backspaces/deletes) per Command
+                    \item Hesitation Count and Duration (pauses during typing)
+                    \item Command Frequency and Patterns
+                \end{itemize}
+            \item \textbf{Functional Fixedness Indicators:}
+                \begin{itemize}
+                    \item Frequency of Conventional vs. Unconventional Use Commands for target objects
+                    \item AI-Generated Functional Fixedness Analysis (Overall Level, Approach, Insight Moments) (\path{src/app/api/session/analyze/route.ts})
+                    \item Fixation Score (calculated based on command patterns)
+                \end{itemize}
+            \item \textbf{Session Metrics:}
+                \begin{itemize}
+                    \item Total Session Duration
+                    \item Total Interactions
+                    \item Completion Rate (Objectives met)
+                \end{itemize}
+        \end{itemize}
+\end{itemize}
+Variant performance is aggregated and compared using metrics stored in the `worldVariants` collection (\path{src/models/WorldVariant.ts}).
+
+\subsection{Materials}
+\begin{itemize}
+    \item \textbf{IBC Terminal Platform:} A web application built with Next.js, providing a terminal interface for interacting with the text-based adventure game (\path{src/components/Terminal.tsx}).
+    \item \textbf{Adventure Worlds:} Multiple distinct game worlds defined in \path{src/config/worlds.ts}. Each world has unique narratives, objectives, and environments. The specific worlds are detailed below. Note: Worlds 5 and 6, marked as "(SHORT)", were designed as shorter experiences to accommodate potential time limitations during experiment conduction, allowing participants to complete a session more quickly while still engaging with functional fixedness puzzles.
+        \subsubsection{Adventure World Details}
+        \begin{itemize}
+            \item \textbf{World 0: Neo-Tokyo 2099}
+                \begin{itemize}
+                    \item \textit{Description:} A cyberpunk dystopia with unreliable automated systems, requiring creative solutions to navigate.
+                    \item \textit{Objectives:} Infiltrate TechCorp, locate a prototype neural interface, escape the city.
+                    \item \textit{Starting Inventory:} Personal Datapad, ID Chip, Credstick (empty).
+                    \item \textit{Puzzles:}
+                        \begin{itemize}
+                            \item The Sliding Door (Fixed Object: Datapad)
+                            \item The Circuit Breaker (Fixed Object: ID Chip)
+                            \item The Biometric Lock (Fixed Object: Adhesive bandage)
+                        \end{itemize}
+                \end{itemize}
+            \item \textbf{World 1: Forgotten Castle}
+                \begin{itemize}
+                    \item \textit{Description:} A medieval fantasy realm with ancient magic, secret passages, and fading mystical barriers.
+                    \item \textit{Objectives:} Find the lost crown, discover the cause of abandonment, escape before barriers seal.
+                    \item \textit{Starting Inventory:} Unlit torch, Small dagger, Empty waterskin.
+                    \item \textit{Puzzles:}
+                        \begin{itemize}
+                            \item The Ancient Lock (Fixed Object: Dagger)
+                            \item The Broken Bridge (Fixed Object: Shield)
+                            \item The Sealed Chamber (Fixed Object: Torch)
+                        \end{itemize}
+                \end{itemize}
+            \item \textbf{World 2: Chronos Station}
+                \begin{itemize}
+                    \item \textit{Description:} An abandoned space station with malfunctioning systems and localized temporal anomalies.
+                    \item \textit{Objectives:} Restore power, discover the crew's fate, secure an escape pod before orbit decays.
+                    \item \textit{Starting Inventory:} Emergency Beacon (inactive), Multitool, Half-charged Oxygen Tank.
+                    \item \textit{Puzzles:}
+                        \begin{itemize}
+                            \item The Radiation Barrier (Fixed Object: Food tray)
+                            \item The Sealed Airlock (Fixed Object: Access Card)
+                            \item The Quantum Lock (Fixed Object: Holographic Display)
+                        \end{itemize}
+                \end{itemize}
+            \item \textbf{World 3: Subterranean Nexus}
+                \begin{itemize}
+                    \item \textit{Description:} An underground network of caves housing the remains of a technologically advanced lost civilization.
+                    \item \textit{Objectives:} Activate the transport network, recover historical records, find a way back to the surface.
+                    \item \textit{Starting Inventory:} Rechargeable Lantern (low battery), Coil of rope, Energy bar.
+                    \item \textit{Puzzles:}
+                        \begin{itemize}
+                            \item The Crystal Mechanism (Fixed Object: Water bottle)
+                            \item The Sonic Chasm (Fixed Object: Metal container)
+                            \item The Pressure Mechanism (Fixed Object: Notebook)
+                        \end{itemize}
+                \end{itemize}
+            \item \textbf{World 4: Ethereal Planes}
+                \begin{itemize}
+                    \item \textit{Description:} A dreamlike dimension where reality is malleable and responds to thoughts and emotions.
+                    \item \textit{Objectives:} Stabilize presence, locate the Nexus of Consciousness, return to own dimension.
+                    \item \textit{Starting Inventory:} Reality Anchor (partially functional), Memory Crystal, Emotion Vial (empty).
+                    \item \textit{Puzzles:}
+                        \begin{itemize}
+                            \item The Barrier of Doubt (Fixed Object: Mirror)
+                            \item The Memory Seal (Fixed Object: Emotion Vial)
+                            \item The Shifting Chasm (Fixed Object: Reality Anchor)
+                        \end{itemize}
+                \end{itemize}
+            \item \textbf{World 5: The Late Night Office (SHORT)}
+                \begin{itemize}
+                    \item \textit{Description:} Accidentally locked inside an office building after hours with partial power shutdown.
+                    \item \textit{Objectives:} Bypass the locked main exit door, escape the building.
+                    \item \textit{Starting Inventory:} Paperclip, Plastic Ruler (30cm), Empty Coffee Mug.
+                    \item \textit{Puzzles:}
+                        \begin{itemize}
+                            \item The Dropped Key (Fixed Object: Paperclip)
+                            \item The High Emergency Button (Fixed Object: Plastic Ruler)
+                        \end{itemize}
+                \end{itemize}
+            \item \textbf{World 6: Server Room Glitch (SHORT)}
+                \begin{itemize}
+                    \item \textit{Description:} Trapped in a university server room after a power fluctuation triggers a security lockdown.
+                    \item \textit{Objectives:} Find and activate the manual door release, escape before backup power fails.
+                    \item \textit{Starting Inventory:} Ethernet Cable (3m, unplugged), Blank CD-R, USB Stick (FAT32 formatted, empty).
+                    \item \textit{Puzzles:}
+                        \begin{itemize}
+                            \item The Override Jumper (Fixed Object: Ethernet Cable)
+                            \item The Misaligned Sensor (Fixed Object: Blank CD-R)
+                        \end{itemize}
+                \end{itemize}
+        \end{itemize}
+    \item \textbf{Puzzles:} Embedded within each world are specific puzzles. Key puzzles are designed to elicit functional fixedness:
+        \begin{itemize}
+            \item Each puzzle identifies a `fixedFunctionObject` (e.g., Datapad, Dagger, Food Tray).
+            \item The `solution` requires using this object in an unconventional manner (e.g., Datapad as a wedge, Dagger handle as a key).
+            \item Each puzzle has distinct `controlVariant` and `experimentalVariant` descriptions presented to the user based on their assigned condition. The experimental variant often includes subtle environmental cues related to the unconventional use.
+            \item A `narrativeJustification` explains the puzzle's importance within the game's story.
+        \end{itemize}
+    \item \textbf{AI Narrator:} A backend AI model (Google Gemini 2.5 Flash, via \path{src/lib/gemini.ts}) generates narrative descriptions, responds to user commands, and evaluates puzzle solutions based on predefined world configurations and system prompts (\path{src/config/systemPrompts.ts}).
+    \item \textbf{Data Storage:} MongoDB database stores session data, interaction logs, and aggregated variant statistics (\path{src/lib/mongodb.ts}, \path{src/models/}).
+\end{itemize}
+
+\subsection{Technology Stack}
+The IBC Terminal platform is built using a modern web technology stack:
+\begin{itemize}
+    \item \textbf{Frontend Framework:} Next.js (v15.3.1) with React (v19) and TypeScript.
+    \item \textbf{Styling:} Tailwind CSS (v4).
+    \item \textbf{Backend Logic:} Next.js API Routes (Serverless Functions) running on Node.js.
+    \item \textbf{Database:} MongoDB (via `mongodb` driver v6.16.0) for storing session data, interactions, and aggregate statistics.
+    \item \textbf{AI Model:} Google Gemini 2.5 Flash (specifically `gemini-2.5-flash-preview-04-17` via `@google/genai` v0.9.0) for generating narrative responses, world introductions, and session analysis.
+    \item \textbf{Unique Identification:} `uuid` library (v11.1.0) for generating persistent device identifiers.
+    \item \textbf{Analytics:} Vercel Analytics (`@vercel/analytics` v1.5.0) for frontend usage tracking (optional).
+\end{itemize}
+
+\subsection{Procedure}
+\begin{enumerate}
+    \item \textbf{Session Initialization:} Upon starting, the user's client generates or retrieves a `deviceId`. The client requests session initialization from the backend (\path{/api/session/initialize}), providing the `deviceId`, desired `worldId`, and assigned `variant` ('A' or 'B'). The backend creates or retrieves a session record in MongoDB (\path{src/models/Session.ts}).
+    \item \textbf{World Introduction:} The backend provides an initial world introduction message, specific to the assigned `worldId` and `variant`. For new sessions, this is generated by the AI; for returning sessions, it's retrieved from history. Markdown is stripped from the intro (\path{src/app/api/session/initialize/route.ts}).
+    \item \textbf{User Interaction:} The participant interacts with the game by typing commands into the terminal interface (\path{src/components/Terminal.tsx}, \path{src/components/CommandInput.tsx}).
+    \item \textbf{Keystroke Logging:} As the participant types, detailed keystroke data (key, timestamp), corrections (backspace/delete), and hesitations (pauses > threshold) are captured locally by the client (\path{src/lib/dataCollection.ts}).
+    \item \textbf{Command Submission:} When a command is submitted, the client records the final command, input duration, command length, and associated metrics. This interaction data, along with `deviceId`, `worldId`, `variant`, and timestamp, is temporarily stored in the browser's localStorage (\path{trackUserInteraction} in \path{dataCollection.ts}).
+    \item \textbf{AI Processing:} The command is sent to the backend (\path{/api/command}). The backend retrieves the session history, appends the user command, and sends the history along with system prompts to the AI model to generate a response (\path{src/lib/gemini.ts}). The AI response also determines if a puzzle was attempted or solved.
+    \item \textbf{Response and Update:} The AI's response is sent back to the client and displayed (\path{src/components/ResponseDisplay.tsx}). The client updates the corresponding interaction record in localStorage with the AI response text and any puzzle context (e.g., `isAttemptedSolution`, `isSolutionSuccess`) returned by the backend (\path{updateInteraction} in \path{dataCollection.ts}). Puzzle state changes (discovered, solved, attempts) are also updated in the session record on the backend (\path{src/models/Session.ts}).
+    \item \textbf{Data Upload:} Upon session completion (or potentially periodically/on browser close), the client triggers an upload of all interactions stored in localStorage, along with a generated session summary, to the backend analytics endpoint (\path{/api/analytics/track}) (\path{uploadStoredInteractions} in \path{dataCollection.ts}).
+    \item \textbf{Backend Storage:} The backend receives the batch data, records each interaction in the `interactions` collection, and records the session summary (including puzzle attempts, timings, and AI analysis results) in the \texttt{\detokenize{session_summaries}} collection (\path{src/app/api/analytics/track/route.ts}, \path{src/models/Interaction.ts}).
+    \item \textbf{Session Analysis (Optional/Batched):} The client can trigger (or the backend can perform) a detailed session analysis (\path{/api/session/analyze}). This involves sending the session's interactions and puzzle data to the AI to generate a structured analysis focusing on functional fixedness, calculating derived metrics, and enhancing puzzle attempt data (\path{src/app/api/session/analyze/route.ts}).
+    \item \textbf{Aggregate Statistics Update:} After a session is recorded, aggregate statistics for the specific world and variant (e.g., total users, average duration, puzzle solve rates, average attempts) are updated in the `worldVariants` collection (\path{src/models/WorldVariant.ts}).
+\end{enumerate}
+
+\subsection{Gameplay Flow}
+The core gameplay experience is designed as an interactive text-based adventure mediated by an AI narrator. The flow proceeds as follows:
+
+\begin{enumerate}
+    \item \textbf{Loading and Consent:} The user accesses the web application (\path{src/app/page.tsx}). If it's their first visit, they are presented with a privacy policy and consent form (\path{src/components/PrivacyPolicyConsent.tsx}). Consent is stored in a cookie.
+    \item \textbf{Device ID and Allocation:} Once consent is given (or if already present), a unique `deviceId` is generated or retrieved from local storage. Based on this `deviceId`, the system deterministically assigns the participant to a specific experimental `variant` ('A' or 'B') using the `allocateWorld` function (\path{src/lib/deviceId.ts}). This ensures a balanced distribution across conditions.
+    \item \textbf{World Selection:} The user is presented with a list of available worlds and their descriptions. They select a world by typing its corresponding number (\path{src/components/Terminal.tsx}).
+    \item \textbf{Session Initialization:} The client sends the `deviceId`, selected `worldId`, and assigned `variant` to the backend API (\path{/api/session/initialize}). The backend retrieves or creates a session record in MongoDB.
+    \item \textbf{World Introduction:} For a new session, the backend requests an introductory narrative from the Gemini AI, tailored to the specific world and variant (\path{src/lib/gemini.ts}, \path{getWorldIntroduction}). This introduction sets the scene, describes the initial environment, and subtly hints at the player's goals. For returning sessions, the first AI message from the stored history is used. The introduction text is streamed to the user interface with a typing animation and sound effect (\path{src/components/ResponseDisplay.tsx}, \path{src/components/Terminal.tsx}).
+    \item \textbf{Interactive Loop:}
+        \begin{itemize}
+            \item \textbf{Command Input:} The user types commands (e.g., "look around", "examine datapad", "use dagger as lever") into the input field (\path{src/components/CommandInput.tsx}). While typing, keystrokes, timing, corrections (backspaces), and hesitations (pauses > 1 second) are recorded locally.
+            \item \textbf{Command Submission:} Upon pressing Enter, the command and its associated metrics (input duration, keystroke details, etc.) are captured. The command is displayed in the terminal output.
+            \item \textbf{Backend Processing:} The command, along with `deviceId`, `worldId`, `variant`, and session history, is sent to the backend API (\path{/api/command}).
+            \item \textbf{Puzzle Context Analysis:} The backend analyzes the command to determine if it relates to a known puzzle, specifically checking if it involves the `fixedFunctionObject` and if it represents a conventional use or an unconventional solution attempt (\path{analyzePuzzleContext} in \path{/api/command/route.ts}).
+            \item \textbf{AI Response Generation:} The command and updated history are sent to the Gemini AI, along with system prompts defining the AI's role as narrator, game rules, and world context (\path{src/lib/gemini.ts}, \path{getGeminiResponse}). The AI generates a response describing the outcome of the command within the game world.
+            \item \textbf{Response Display:} The AI's response is sent back to the client. A thinking indicator (blinking cursor and sound) is shown while waiting. Once received, the response is displayed with a typing animation and sound effect (\path{src/components/ResponseDisplay.tsx}).
+            \item \textbf{State Update:} The backend updates the session history in MongoDB. If the command was a puzzle attempt, the puzzle state (attempts, solved status, timestamps) is updated (\path{src/models/Session.ts}). The interaction record, including the AI response and final puzzle context (e.g., `isSolutionSuccess`), is updated in both local storage (\path{updateInteraction} in \path{src/lib/dataCollection.ts}) and the backend database.
+        \end{itemize}
+    \item \textbf{Puzzle Solving:} Puzzles typically require the user to identify the `fixedFunctionObject` and devise an unconventional `solution` command (e.g., "use datapad as wedge"). The AI is prompted not to give direct hints but may provide subtle environmental cues (especially in Variant B). Success is determined by matching the command pattern and analyzing the AI's response for success indicators (\path{analyzeResponseForSolution} in \path{/api/command/route.ts}). The game continues until all puzzles defined for the world are solved.
+    \item \textbf{Session Completion:} The user can end the session by typing commands like "exit" or "quit". This triggers the upload of all locally stored interaction data and the generated session summary to the backend (\path{uploadStoredInteractions} in \path{src/lib/dataCollection.ts}). A confirmation message is displayed.
+\end{enumerate}
+
+\subsection{Data Analysis}
+\begin{itemize}
+    \item \textbf{Quantitative Analysis:} Statistical comparisons (e.g., t-tests, ANOVA) will be performed between Variant A and Variant B groups on the dependent variables stored in MongoDB. Key comparisons include time to solution, number of attempts, hesitation metrics, and frequency of unconventional use commands for the target puzzles. Aggregate data from `worldVariants` provides high-level comparisons.
+    \item \textbf{Qualitative Analysis:} The AI-generated `functionalFixednessAnalysis` for each session provides qualitative insights into user strategies, points of difficulty, and potential moments of insight. Conversation transcripts (`conversationData`) can be reviewed for specific patterns.
+    \item \textbf{Keystroke Dynamics:} Analysis of input duration, corrections, and hesitations can provide finer-grained insights into cognitive load and uncertainty during puzzle-solving, particularly comparing moments of conventional vs. unconventional thinking.
+\end{itemize}
+
+\section{Expected Results and Discussion}
+
+Based on functional fixedness literature, we expect participants in Variant B (priming) to outperform those in Variant A (control) on the functional fixedness puzzles. Specifically, Variant B participants are expected to solve these puzzles faster, with fewer attempts, and exhibit more commands exploring or attempting the unconventional use of the target objects. Hesitation patterns might differ, potentially showing less hesitation before attempting the unconventional solution in Variant B if the priming was effective. The AI analysis is expected to rate Variant B participants as having lower overall functional fixedness and potentially identify the environmental cues as contributing factors to insight. Comparing metrics across different puzzles will help identify which objects or scenarios induce stronger functional fixedness effects.
+
+\section{References}
+
+Duncker, K. (1945). On problem-solving. \textit{Psychological Monographs, 58}(5), i–113.
+
+% Add other relevant references if applicable
+
+\end{document}
