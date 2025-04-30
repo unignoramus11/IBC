@@ -1,265 +1,271 @@
 /**
  * Interaction.ts
  * --------------
- * Defines MongoDB models and interfaces for user interactions, session summaries, and research metrics in the IBC Terminal platform.
- * Used for storing, retrieving, and analyzing participant behavior and functional fixedness data.
- *
- * Exports:
- * - Interaction, PuzzleAttempt, FunctionalFixednessMetricsData, ConversationData, SessionSummary, FunctionalFixednessMetrics: TypeScript interfaces for research data
- * - recordInteraction, recordSessionSummary, updateInteractionWithResponse, getDeviceInteractions, getDeviceSessionSummaries, getInteractionsForAnalysis, getSessionSummariesForAnalysis: MongoDB access functions
+ * Defines MongoDB models and interfaces for user interactions, session summaries, and research metrics
+ * in the IBC Terminal platform. Used for storing, retrieving, and analyzing participant behavior
+ * and functional fixedness data.
  */
 
-// Interaction.ts - MongoDB model for user interactions
+import { ObjectId, Db } from "mongodb"; // Import Db type
 
-import { ObjectId } from "mongodb";
+// --- Core Interaction Data ---
+
+// Reusing PuzzleContext interface defined in route.ts (or define similarly here)
+// Ensure this structure matches what's saved from the route logic
+interface PuzzleContext {
+  activePuzzleId?: string;
+  isAttemptedSolution: boolean;
+  isSolutionSuccess: boolean;
+  puzzleName?: string;
+  fixedFunctionObject?: string;
+  conventionalUse?: boolean;
+  previouslyAttempted?: boolean;
+  previouslySolved?: boolean;
+}
 
 /**
- * Represents a single user interaction with the terminal, including keystroke metrics and puzzle context.
+ * Represents a single user interaction event data structure in MongoDB.
  */
-export interface Interaction {
+export interface InteractionData {
   _id?: ObjectId;
   deviceId: string;
   sessionId: ObjectId | null;
   worldId: number;
   variant: "A" | "B";
   command: string;
-  response?: string; // The AI's response to this command
-  timestamp: Date;
-  responseTime?: number; // Time it took for model to respond
+  response?: string; // AI response text
+  timestamp: Date; // When the command was received by the server
+  responseTime?: number; // Time (ms) from command received to response sent back
+  // Detailed metrics captured from the client
   metrics: {
-    inputDuration: number; // How long it took to type the command
+    inputDuration: number; // Time (ms) user took to type command
     keystrokes: {
       key: string;
-      timestamp: number;
+      timestamp: number; // Relative timestamp or absolute? Decide based on analysis needs
     }[];
-    corrections: number; // Number of backspaces/deletes
+    corrections: number; // Count of backspace/delete uses
     hesitations: {
-      duration: number; // Duration of pause in ms
-      position: number; // Position in the command where hesitation occurred
+      duration: number; // Duration (ms) of pause > threshold
+      position: number; // Character index in command string where pause occurred
     }[];
     commandLength: number;
   };
-  puzzleContext?: {
-    activePuzzleId?: string; // ID of puzzle being attempted
-    isAttemptedSolution: boolean; // Flagged if this might be a solution attempt
-    isSolutionSuccess: boolean; // Flagged if this command solved a puzzle
-  };
+  // Context about puzzle relevance determined during command processing
+  puzzleContext?: PuzzleContext;
 }
 
+// --- Session Summary and Analysis Data Structures ---
+// These structures are primarily for post-session analysis/summarization
+
 /**
- * Represents a single puzzle attempt within a session, including solution attempts and hesitation metrics.
+ * Represents summarized data for a single puzzle's attempts within a completed session.
  */
-export interface PuzzleAttempt {
-  puzzleId: string;
-  puzzleName?: string;
-  fixedFunctionObject?: string;
-  attemptCount: number;
-  conventionalUseCount?: number; // Times the object was used conventionally
-  unconventionalUseCount?: number; // Times the object was used in creative ways
-  timeToSolution?: number; // ms from first attempt to solution
+export interface PuzzleAttemptSummary {
+  puzzleId: string; // From PuzzleDefinition.id
+  puzzleName?: string; // From PuzzleDefinition.name
+  fixedFunctionObject?: string; // From PuzzleDefinition.fixedFunctionObject.name
+  attemptCount: number; // Total attempts related to this puzzle object
+  conventionalUseCount?: number; // Attempts deemed conventional
+  unconventionalUseCount?: number; // Attempts deemed unconventional (incl. success)
+  timeToSolutionMs?: number; // Time from first relevant interaction to solution (ms)
   solutionFound: boolean;
-  hesitationCount?: number; // Number of hesitations during puzzle attempts
-  averageHesitationDuration?: number; // Average hesitation duration
-  firstEncounterTime?: Date; // When the object was first encountered
-  solvedTime?: Date; // When the puzzle was solved
+  hesitationCount?: number; // Total hesitations recorded during interactions for this puzzle
+  averageHesitationDurationMs?: number; // Average duration of hesitations
+  firstInteractionTime?: Date; // Timestamp of first interaction related to puzzle
+  firstEncounterTime?: Date; // Timestamp of first encounter with puzzle context
+  solvedTime?: Date; // Timestamp of successful solution
 }
 
 /**
- * Research metrics for functional fixedness, including overall level, hesitation, and approach.
+ * Placeholder for aggregated/derived functional fixedness metrics for a session.
  */
 export interface FunctionalFixednessMetricsData {
-  overallFixednessLevel: string; // "High", "Moderate", "Low"
-  averageHesitationDuration: number; // Average hesitation across all puzzles
-  totalHesitations: number; // Total hesitation moments
-  problemSolvingApproach: string; // "Methodical", "Balanced", "Trial-and-Error"
-  environmentalPrimingEffectiveness?: string; // For variant B only
-  experimentQualityScore?: number; // 1-10 assessment of experiment quality
-  insightMomentsObserved: number; // Count of apparent insight moments
+  overallFixednessLevel: "High" | "Moderate" | "Low" | "N/A"; // Categorical assessment
+  averageHesitationDurationMs?: number;
+  totalHesitations?: number;
+  problemSolvingApproach?:
+    | "Methodical"
+    | "Balanced"
+    | "Trial-and-Error"
+    | "N/A"; // Style assessment
+  environmentalPrimingEffectiveness?:
+    | "High"
+    | "Moderate"
+    | "Low"
+    | "N/A"
+    | "Not Applicable"; // Variant B only
+  insightMomentsObserved?: number;
+  // Add other relevant derived metrics
 }
 
 /**
- * Conversation-level data for a session, including full transcript and command statistics.
+ * Placeholder for aggregated conversation data for a session.
  */
 export interface ConversationData {
-  fullConversation: { role: string; content: string; timestamp: number }[]; // Complete conversation history
-  totalDuration: number; // Total session duration in ms
-  commandCount: number; // Total commands issued
-  uniqueCommandTypes: number; // Number of unique command categories
-  mostFrequentCommands: string[]; // Top used commands
+  // Example fields - tailor to your analysis needs
+  fullConversation?: { role: string; content: string; timestamp: number }[]; // Consider storage limits
+  totalDurationMs: number;
+  commandCount: number;
+  uniqueCommands?: string[];
+  // Potentially sentiment analysis, topic modeling results, etc.
 }
 
 /**
- * Represents a summary of a session, including puzzle attempts and research analysis.
+ * Represents a summarized record of a completed session for analysis purposes.
  */
-export interface SessionSummary {
+export interface SessionSummaryData {
   _id?: ObjectId;
   deviceId: string;
+  sessionId: ObjectId; // Link back to the original SessionData
   worldId: number;
   variant: "A" | "B";
   startTime: Date;
-  endTime: Date;
-  totalInteractions: number;
-  puzzleAttempts: PuzzleAttempt[];
-  functionalFixednessAnalysis: string; // AI-generated analysis
-  functionalFixednessMetrics?: FunctionalFixednessMetricsData;
-  conversationData?: ConversationData;
-  completionTimestamp: Date;
+  endTime: Date; // When the session was marked complete or timed out
+  totalDurationMs: number; // Calculated duration
+  totalInteractions: number; // Count of user commands
+  puzzleAttemptSummaries: PuzzleAttemptSummary[]; // Array of summaries for each puzzle
+  functionalFixednessAnalysis?: string; // AI-generated textual analysis (optional)
+  functionalFixednessMetrics?: FunctionalFixednessMetricsData; // Calculated metrics (optional)
+  conversationData?: ConversationData; // Aggregated conversation stats (optional)
+  completionStatus: "Completed" | "Abandoned" | "Error"; // How the session ended
 }
 
-/**
- * Detailed functional fixedness metrics for a session or puzzle.
- */
-export interface FunctionalFixednessMetrics {
-  // Core metrics from Duncker's paradigm
-  timeToSolution: number; // Time from puzzle presentation to solution in ms
-  solutionAttempts: number; // Number of attempts before successful solution
-  conventionalUseReferences: number; // How often user referred to object's conventional use
-
-  // Enhanced cognitive metrics
-  fixationScore: number; // 1-10 measure of how fixated user was on conventional use
-  insightMoment: string; // Description of what triggered the insight
-  creativityPathways: string[]; // Different approaches attempted
-
-  // Object interaction metrics
-  objectInteractions: {
-    objectName: string;
-    conventionalUses: number; // Times used conventionally
-    nonConventionalUses: number; // Times used in novel ways
-    examinedCount: number; // Times examined before solution
-  }[];
-
-  // Control/experimental comparison data
-  variantType: "A" | "B"; // Which experimental variant was used
-  variantEffectSize?: number; // Calculated difference in performance between variants
-}
+// --- Database Functions ---
 
 /**
- * Records a new user interaction in the database.
- * @param db - MongoDB database instance
+ * Records a new user interaction event in the database.
+ * @param db - MongoDB Db instance
  * @param interaction - The interaction data (without _id)
- * @returns The inserted Interaction with _id
+ * @returns The inserted InteractionData with _id
  */
 export const recordInteraction = async (
-  db: any,
-  interaction: Omit<Interaction, "_id">
-): Promise<Interaction> => {
-  const result = await db.collection("interactions").insertOne({
+  db: Db, // Use Db type
+  // Use Omit<InteractionData, '_id'> for the input type
+  interaction: Omit<InteractionData, "_id">
+): Promise<InteractionData> => {
+  // Ensure timestamp is a Date object
+  const interactionToInsert = {
     ...interaction,
     timestamp: new Date(interaction.timestamp),
-  });
+  };
+  const result = await db
+    .collection<Omit<InteractionData, "_id">>("interactions")
+    .insertOne(interactionToInsert);
+
+  if (!result.insertedId) {
+    throw new Error("Failed to insert interaction into database.");
+  }
 
   return {
-    ...interaction,
+    ...interactionToInsert,
     _id: result.insertedId,
   };
 };
 
 /**
- * Records a session summary in the database.
- * @param db - MongoDB database instance
+ * Records a session summary in the database after a session concludes.
+ * @param db - MongoDB Db instance
  * @param summary - The session summary data (without _id)
  * @returns The inserted ObjectId
  */
 export const recordSessionSummary = async (
-  db: any,
-  summary: Omit<SessionSummary, "_id">
+  db: Db, // Use Db type
+  summary: Omit<SessionSummaryData, "_id"> // Use Omit and correct type
 ): Promise<ObjectId> => {
-  const result = await db.collection("session_summaries").insertOne(summary);
+  const result = await db
+    .collection<Omit<SessionSummaryData, "_id">>("session_summaries")
+    .insertOne(summary);
+
+  if (!result.insertedId) {
+    throw new Error("Failed to insert session summary into database.");
+  }
   return result.insertedId;
 };
 
-/**
- * Updates an interaction with the model's response time.
- * @param db - MongoDB database instance
- * @param interactionId - The ObjectId of the interaction
- * @param responseTime - The response time in ms
- */
-export const updateInteractionWithResponse = async (
-  db: any,
-  interactionId: ObjectId,
-  responseTime: number
-): Promise<void> => {
-  await db
-    .collection("interactions")
-    .updateOne({ _id: interactionId }, { $set: { responseTime } });
-};
+// Note: updateInteractionWithResponse was removed as the logic is better handled in the route
+// after the AI response is received and analyzed. The route now updates the interaction record
+// with response, responseTime, and final puzzleContext.
 
 /**
- * Retrieves recent interactions for a device.
- * @param db - MongoDB database instance
- * @param deviceId - The device/session ID
+ * Retrieves recent interactions for a specific device.
+ * @param db - MongoDB Db instance
+ * @param deviceId - The device ID
  * @param limit - Maximum number of interactions to return
- * @returns Array of Interaction objects
+ * @returns Array of InteractionData objects
  */
 export const getDeviceInteractions = async (
-  db: any,
+  db: Db, // Use Db type
   deviceId: string,
   limit = 100
-): Promise<Interaction[]> => {
+): Promise<InteractionData[]> => {
   return db
-    .collection("interactions")
+    .collection<InteractionData>("interactions") // Use InteractionData type
     .find({ deviceId })
-    .sort({ timestamp: -1 })
+    .sort({ timestamp: -1 }) // Get latest first
     .limit(limit)
     .toArray();
 };
 
 /**
- * Retrieves recent session summaries for a device.
- * @param db - MongoDB database instance
- * @param deviceId - The device/session ID
+ * Retrieves recent session summaries for a specific device.
+ * @param db - MongoDB Db instance
+ * @param deviceId - The device ID
  * @param limit - Maximum number of summaries to return
- * @returns Array of SessionSummary objects
+ * @returns Array of SessionSummaryData objects
  */
 export const getDeviceSessionSummaries = async (
-  db: any,
+  db: Db, // Use Db type
   deviceId: string,
   limit = 10
-): Promise<SessionSummary[]> => {
+): Promise<SessionSummaryData[]> => {
   return db
-    .collection("session_summaries")
+    .collection<SessionSummaryData>("session_summaries") // Use SessionSummaryData type
     .find({ deviceId })
-    .sort({ completionTimestamp: -1 })
+    .sort({ endTime: -1 }) // Sort by end time, latest first
     .limit(limit)
     .toArray();
 };
 
 /**
- * Retrieves interactions for research analysis based on a query.
- * @param db - MongoDB database instance
- * @param query - MongoDB query object
- * @param limit - Maximum number of interactions to return
- * @returns Array of Interaction objects
+ * Retrieves interactions for research analysis based on a flexible query.
+ * @param db - MongoDB Db instance
+ * @param query - MongoDB query object (e.g., { worldId: 5, variant: 'B' })
+ * @param limit - Maximum number of interactions
+ * @param sort - MongoDB sort object (e.g., { timestamp: 1 })
+ * @returns Array of InteractionData objects
  */
 export const getInteractionsForAnalysis = async (
-  db: any,
+  db: Db, // Use Db type
   query: any = {},
-  limit = 1000
-): Promise<Interaction[]> => {
+  limit = 1000,
+  sort: any = { timestamp: 1 } // Default sort: oldest first
+): Promise<InteractionData[]> => {
   return db
-    .collection("interactions")
+    .collection<InteractionData>("interactions") // Use InteractionData type
     .find(query)
-    .sort({ timestamp: -1 })
+    .sort(sort)
     .limit(limit)
     .toArray();
 };
 
 /**
- * Retrieves session summaries for research analysis based on a query.
- * @param db - MongoDB database instance
+ * Retrieves session summaries for research analysis based on a flexible query.
+ * @param db - MongoDB Db instance
  * @param query - MongoDB query object
- * @param limit - Maximum number of summaries to return
- * @returns Array of SessionSummary objects
+ * @param limit - Maximum number of summaries
+ * @param sort - MongoDB sort object
+ * @returns Array of SessionSummaryData objects
  */
 export const getSessionSummariesForAnalysis = async (
-  db: any,
+  db: Db, // Use Db type
   query: any = {},
-  limit = 100
-): Promise<SessionSummary[]> => {
+  limit = 100,
+  sort: any = { endTime: -1 } // Default sort: latest first
+): Promise<SessionSummaryData[]> => {
   return db
-    .collection("session_summaries")
+    .collection<SessionSummaryData>("session_summaries") // Use SessionSummaryData type
     .find(query)
-    .sort({ completionTimestamp: -1 })
+    .sort(sort)
     .limit(limit)
     .toArray();
 };

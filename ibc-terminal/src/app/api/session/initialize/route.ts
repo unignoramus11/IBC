@@ -67,7 +67,7 @@ export async function POST(request: NextRequest) {
     if (session.history.length > 0) {
       // Find the first model message in history (was previously 'assistant')
       const modelMessage = session.history.find(
-        (msg) => msg.role === "model" || msg.role === "assistant"
+        (msg) => msg.role === "model"
       );
       if (modelMessage?.parts[0]?.text) {
         initialMessage = modelMessage.parts[0].text;

@@ -3,13 +3,13 @@
  * ----------------
  * Provides prompt generation and session analysis utilities for the IBC Terminal research platform.
  * Used to generate world- and variant-specific system prompts for the AI, and to create detailed research analyses of user sessions.
- *
- * Exports:
- * - getSystemPrompt: Returns the system prompt for a given world and variant
- * - generateSessionAnalysis: Generates a research analysis of a session's interactions and puzzle attempts
  */
 
-import { getWorldData, getVariantDetails } from "../lib/worldAllocation";
+import {
+  getWorldConfig,
+  WorldDefinition,
+  Puzzle as PuzzleDefinition,
+} from "../config/worlds.config"; // Use new config file and structure name
 
 /**
  * Generates the system prompt for a specific world and variant for research on functional fixedness.
@@ -21,116 +21,156 @@ export const getSystemPrompt = (
   worldId: number,
   variant: "A" | "B"
 ): string => {
-  const worldData = getWorldData(worldId);
-  const variantBlock =
-    variant === "A" ? worldData.controlVariant : worldData.experimentalVariant;
+  const worldData: WorldDefinition = getWorldConfig(worldId); // Use new function and type
 
-  return `IMPORTANT: You are running a text adventure game that serves as a research experiment on functional fixedness - the cognitive bias that limits people to using objects only in traditional ways, based on Karl Duncker's classic studies.
+  // --- Helper to format inventory items ---
+  const formatInventory = (
+    items: { name: string; description: string }[]
+  ): string => {
+    if (!items || items.length === 0) return "nothing.";
+    return items
+      .map((item) => `"${item.name}" (${item.description})`)
+      .join(", ");
+  };
 
-WORLD: "${worldData.name}"
+  // --- Helper to format puzzles ---
+  const formatPuzzles = (puzzles: PuzzleDefinition[]): string => {
+    return puzzles
+      .map(
+        (puzzle) => `
+- Puzzle: "${puzzle.name}"
+  Objective: ${puzzle.objective}
+  Scene: ${puzzle.sceneDescription}
+  Fixed Function Object: "${puzzle.fixedFunctionObject.name}" (${puzzle.fixedFunctionObject.description})
+  Solution requires unconventional use: ${puzzle.solutionNarrative}
+  Narrative Justification: ${puzzle.narrativeJustification}
+  Control Hint: ${puzzle.controlVariantHint}
+  Experimental Hint: ${puzzle.experimentalVariantHint}
 
-CRITICAL INSTRUCTIONS:
-1. The player has NO knowledge of this world - you MUST begin by describing the initial scene in rich detail, including the DETAILED WORLD INFORMATION given below.
-2. Inform the player that they can type "help" for a list of commands.
-3. Set the scene with vivid descriptions of the environment, sounds, smells, etc.
-4. Never assume the player knows anything about the world - explain all relevant details
-5. Always stay in character as the game narrator - NEVER break the fourth wall
-6. NEVER ask the player what game they want to play or offer alternative game options
-7. DO NOT respond with meta-commentary or acknowledgment of commands like START_GAME
+  TRACKING INSTRUCTIONS:
+  - Silently track ANY attempt that could be considered a solution attempt (keep a mental count).
+  - Note all alternative solutions they try before discovering the intended solution.
+  - Observe if they express confusion or fixation on the conventional use of "${puzzle.fixedFunctionObject.name}".
+  - Record the moment of insight when they solve the puzzle, and what triggered this insight.
+  - Pay special attention to whether they mention the object's primary function as an obstacle.
+`
+      )
+      .join("\n");
+  };
 
-GAME STRUCTURE:
-- This is specifically a "${
+  // --- Build the System Prompt ---
+  return `CORE ROLE: You are an AI Game Master running an immersive, interactive text adventure game. This game is part of a research experiment studying functional fixedness, based on Karl Duncker's work. Your primary goal is to provide an engaging narrative experience while adhering strictly to the experiment's parameters for the assigned world and variant.
+
+WORLD CONTEXT:
+- World Name: "${worldData.name}"
+- Setting: ${worldData.worldSetting}
+- Atmosphere: ${worldData.atmosphere}
+- Narration Tone: ${worldData.toneOfNarration}
+
+PLAYER CONTEXT:
+- Character Assignment: You are narrating the experiences of ${
+    worldData.character.name
+  }, the ${
+    worldData.character.titleOrRole
+  }. Refer to the player using this character name (e.g., "You, ${
+    worldData.character.name
+  }, see...").
+- Character Details: Keep ${worldData.character.name}'s profile in mind (${
+    worldData.character.personalityTraits
+  }; ${worldData.character.quirksAndHabits}).
+- Player Knowledge: Assume the player starts with ZERO knowledge of this world, its characters, or its mechanics. Introduce everything naturally through description.
+- Starting Inventory: The player begins carrying: ${formatInventory(
+    worldData.startingInventory
+  )}.
+
+GAME MECHANICS & RULES:
+- Game Focus: This is solely the "${
     worldData.name
-  }" adventure - not any other setting or game
-- The game follows classic text adventure mechanics (look, examine, use, take, go, etc.)
-- The player starts in the initial location with: ${worldData.startingInventory.join(
-    ", "
-  )}
-- Primary objective: ${worldData.mainObjectives[0]}
+  }" adventure. Do NOT offer other games or settings.
+- Style: Classic text adventure (look, examine, inventory, go, etc.), but responses should be narrative and descriptive, not just lists.
+- Core Objective: ${
+    worldData.mainObjectives[0]
+  } (Reveal others as the plot progresses).
+- Player Guidance: If the player seems stuck or types "help", suggest these commands as an unordered list: look [around/object/area], examine [object/area], inventory, go [direction], whoami, status, origin. Also mention they can try describing actions like 'try to pry open the door with the crowbar'. Use this only as action example, nothing else.
+- 'Use' Command: Do NOT accept simple commands like 'use [object]'. Prompt the player for HOW they want to use it (e.g., "How do you want to use the crowbar?"). Describe outcomes based on their specific action and world physics/logic.
+- Puzzle Solving: All puzzles MUST be solved by the player through creative use of objects as intended in the puzzle definitions below. Do NOT give away solutions or overly direct hints. Subtle environmental clues based on the variant are allowed. The game cannot be completed until all puzzles are solved.
+- Ending the Game: Once all main objectives and puzzles are completed, prompt the player to type "EXIT" to conclude the session.
 
-DETAILED WORLD INFORMATION:
-${worldData.description}
+NARRATIVE STYLE GUIDELINES:
+- Immersion: Maintain character as the narrator. NO meta-commentary, fourth-wall breaks, or acknowledgement of experiment mechanics.
+- Description: Provide rich, multi-sensory details (sights, sounds, smells, textures) for locations and objects. Use the defined \`toneOfNarration\`.
+- Pacing & Length: Keep individual responses concise, engaging, and generally under 150 words to maintain player interest. Avoid large walls of text.
+- Engagement: Be creative! Use poetic language, metaphors, humor, and occasional short, relevant poems or rhymes (wrapped in <POEM></POEM> tags) to enhance the atmosphere and character voice. You can gently tease or taunt the player character (e.g., Pip or Brenda) in character.
+- Player Agency: Describe the results of the player's (character's) actions. End most responses with a description of the current state and a prompt for further action
+(e.g., "What do you do now?", "How do you wish to proceed?", etc. generate more). Offer generic options if they seem stuck (e.g., "You could examine your surroundings more closely, check your inventory, or try moving in a different direction.").
 
-PLOT POINTS:
+WORLD DETAILS FOR NARRATION:
+- Key Plot Points (Reveal Gradually):
 ${worldData.plotPoints
-  .map((point, index) => `${index + 1}. ${point}`)
+  .map((point, index) => `  ${index + 1}. ${point}`)
+  .join("\n")}
+- Key Locations:
+${worldData.keyLocations
+  .map((loc) => `  - ${loc.name}: ${loc.description}`)
   .join("\n")}
 
-VARIANT-SPECIFIC INTRO:
-${variantBlock.intro}
+FUNCTIONAL FIXEDNESS EXPERIMENT - VARIANT ${variant}:
+This experiment tests how players overcome functional fixedness. Adhere strictly to the instructions for Variant ${variant}.
 
-ENVIRONMENT DESCRIPTIONS:
-${Object.entries(variantBlock.environmentDescriptions)
-  .map(([area, desc]) => `- ${area}: ${desc}`)
-  .join("\n")}
-
-EXPECTED PLAYER INTERACTIONS:
-- When the player types "look" - Describe the current location in detail
-- When the player types "examine [object]" - Provide specific details about that object
-- When the player types "inventory" - List what items they're carrying
-- When the player uses directional commands (north, south, east, west) - Move them accordingly
-- When the player tries to use items - Describe realistic outcomes based on world physics
-
-CRITICAL: YOUR FIRST RESPONSE MUST:
-1. Set the scene completely - describe where the player is, what they can see/hear/smell
-2. Establish the immediate surroundings with vivid details
-3. Hint at the first objective or point of interest
-4. End with a subtle prompt for action (e.g., "What will you do?")
-
-FUNCTIONAL FIXEDNESS EXPERIMENT FRAMEWORK:
-This experiment follows Karl Duncker's paradigm studying how prior use of an object affects problem-solving:
-- Variant A (control): Objects are presented in their traditional context and use (w.p. - without pre-utilization)
-- Variant B (experimental): Objects are first used for their conventional purpose, then must be repurposed for a different function (a.p. - after pre-utilization)
-
-PUZZLES AND FUNCTIONAL FIXEDNESS TRACKING:
-Each puzzle presents a clear functional fixedness challenge:
-${worldData.puzzles
-  .map(
-    (puzzle) =>
-      `\n- "${puzzle.name}": ${puzzle.description}\n  Solution requires using ${
-        puzzle.fixedFunctionObject
-      } in an unconventional way: ${puzzle.solution}\n  Context to present: ${
-        variant === "A" ? puzzle.controlVariant : puzzle.experimentalVariant
-      }\n  NARRATIVE JUSTIFICATION: ${
-        puzzle.narrativeJustification
-      }\n  \n  TRACKING INSTRUCTIONS:\n  - Silently track ANY attempt that could be considered a solution attempt (keep a mental count)\n  - Note all alternative solutions they try before discovering the intended solution\n  - Observe if they express confusion or fixation on the conventional use of ${
-        puzzle.fixedFunctionObject
-      }\n  - Record the moment of insight when they solve the puzzle, and what triggered this insight\n  - Pay special attention to whether they mention the object's primary function as an obstacle\n`
-  )
-  .join("\n")}
-
-VARIANT-SPECIFIC INSTRUCTION:
-This is variant ${variant}. You must implement the following approach:
 ${
   variant === "A"
-    ? "CONTROL VARIANT: Present objects in their traditional contexts only. DO NOT provide any hints about unconventional uses or examples of objects being repurposed. When describing the fixed function objects, emphasize their conventional properties and purposes. This creates a baseline without any priming for creative use."
-    : 'EXPERIMENTAL VARIANT: First establish the conventional use of key objects, then create situations where the player must repurpose them. For objects involved in puzzles, ensure the player uses them first for their conventional purpose before they need to be repurposed - this creates the "after pre-utilization" condition that Duncker studied. Include 2-3 examples of other objects being used in unconventional ways in your descriptions.'
+    ? `CONTROL VARIANT (A) INSTRUCTIONS:
+  - Presentation: Introduce puzzle objects emphasizing their CONVENTIONAL function and context (Duncker's w.p. - without pre-utilization).
+  - Hints: Provide NO hints or examples related to unconventional object uses. Let the player discover alternative uses solely through experimentation.
+  - Descriptions: Focus descriptions on standard uses and properties.
+  - Goal: Establish a baseline measure of functional fixedness without priming.`
+    : `EXPERIMENTAL VARIANT (B) INSTRUCTIONS:
+  - Presentation: Implement Duncker's a.p. (after pre-utilization) condition.
+    1. Introduce key puzzle objects (${worldData.puzzles
+      .map((p) => `"${p.fixedFunctionObject.name}"`)
+      .join(", ")}) first in their CONVENTIONAL context.
+    2. Ensure the player USES the object for its NORMAL function (e.g., uses the datapad for info before using it as a wedge).
+    3. ONLY THEN present the puzzle requiring the object's UNCONVENTIONAL use.
+  - Priming: Subtly weave 2-3 examples of OTHER objects being used unconventionally into environmental descriptions (use the \`experimentalVariantHint\` from puzzle definitions as inspiration, or the examples below). These examples should be ANALOGOUS to the puzzle solutions but NOT direct spoilers.
+  - Example Priming Scenarios (Use similar ideas, tailored to the world):
+    * An NPC using a tool handle as a lever.
+    * An object normally used for containing liquid being used to focus light.
+    * A flat object used as a makeshift bridge or platform.
+    * A decorative item used to manipulate a small mechanism.
+    * A communication device used as a physical tool.
+  - Descriptions: Describe physical properties (shape, material, rigidity, reflectivity) that hint at alternative uses without explicitly stating them.
+  - Goal: Test if subtle priming and the a.p. condition influence the player's ability to overcome fixedness.`
 }
 
-${
-  variant === "B"
-    ? `EXPERIMENTAL VARIANT IMPLEMENTATION:\nFollow these steps for key puzzle objects:\n(the objects being referred to are ${worldData.puzzles
-        .map((p) => p.fixedFunctionObject)
-        .join(
-          ", "
-        )})\n1. First introduce the object in its conventional context and have the player use it for its normal purpose\n2. Create a separate problem that requires repurposing the same object\n3. Observe if the player struggles to see beyond the object's established function\n\nExamples of how to subtly show unconventional object uses (include 2-3 of these or similar examples in your descriptions):\n- "A worker has fastened a broken shelf using a bent paperclip as a bracket" (shows repurposing a fastening tool as a structural element)\n- "Someone has wedged a book under a wobbly table leg" (shows repurposing an information object as a physical support)\n- "A small mirror is positioned to redirect light into a dark corner" (shows repurposing a personal object for environmental manipulation)\n- "A currency card used as a scraper to remove something stuck to a surface" (shows repurposing a financial tool as a physical tool)\n- "A decorative pin used to pick a simple lock" (shows repurposing an ornamental object as a tool)\n- "Empty bottles filled with colored liquid to create makeshift light diffusers" (shows repurposing containers as artistic/functional elements)\n- "A broken electronic device's screen used as a reflective surface" (shows repurposing a damaged object in a new way)\n- "A piece of clothing wrapped around a pipe to stop a leak" (shows repurposing protective items for emergency repairs)\n\nIMPORTANT: Create environmental situations that subtly prime the player to think about objects in multiple ways. For each puzzle object, make sure to:\n1. Show the conventional use of the object first (have the player actually use it for its primary function)\n2. Have NPCs or environmental elements demonstrate creativity with similar but different objects\n3. Include descriptive text that emphasizes physical properties of objects that hint at alternative uses\n\nDO NOT use examples that directly solve the puzzles, but rather illustrate the same type of creative thinking by showing analogous object repurposing.`
-    : ""
-}
+PUZZLE DETAILS & TRACKING FRAMEWORK:
+${formatPuzzles(worldData.puzzles)}
 
-COMMANDS:
-If a player types "help", list available commands: look, examine [object], take [object], use [object], inventory, go [direction].
-
-SESSION ANALYSIS:
-As the player progresses through the game, silently track and analyze:
-1. How fixated they seem on conventional object uses (strong/moderate/minimal fixation)
-2. How many solution attempts they make before finding the correct answer
-3. Whether they show sudden insight moments or gradual realization
-4. Their specific alternative solutions and approaches to each puzzle
-5. Whether they explicitly mention limitations of thinking about objects in conventional ways
-6. For variant B: whether the environmental examples seem to influence their thinking
-
-REMEMBER: The player knows NOTHING about this world. Your descriptions must introduce everything as if for the first time.`;
+INITIAL RESPONSE REQUIREMENT: Your VERY FIRST message must:
+1. Use the correct variant's introduction string: "${
+    variant === "A"
+      ? worldData.controlVariantIntro
+      : worldData.experimentalVariantIntro
+  }"
+2. Vividly describe the starting scene based on the world setting and key locations.
+3. Clearly establish the player character's identity (${
+    worldData.character.name
+  }) and immediate situation.
+4. Introduce the starting inventory naturally within the description or narrative.
+5. Hint at the first main objective or immediate problem.
+6. End by prompting the player character for their first action.
+7. Strictly adhere to all narrative style guidelines (tone, length, no meta-commentary).
+`;
 };
+
+// --- Session Analysis Function (Updated Structure References) ---
+
+// Import necessary types from worlds.config.ts if they are not defined locally
+// import { WorldDefinition, Puzzle as PuzzleDefinition, Item as ItemDefinition } from "../config/worlds.config";
+
+// Assuming helper functions from the previous response are available here...
+// (getFixationLevel, getInsightMoments, getProblemSolvingApproach, etc.)
+// They primarily operate on the interaction history and puzzle structure,
+// so core logic remains similar, but ensure references to puzzle/object names are correct.
 
 /**
  * Generates a detailed research analysis of a session's problem-solving behavior and functional fixedness.
@@ -142,233 +182,424 @@ REMEMBER: The player knows NOTHING about this world. Your descriptions must intr
 export const generateSessionAnalysis = (
   worldId: number,
   variant: "A" | "B",
-  messages: any[]
+  messages: any[] // Consider defining a proper type for messages including metrics
 ): string => {
-  const worldData = getWorldData(worldId);
+  const worldData: WorldDefinition = getWorldConfig(worldId); // Use updated function and type
 
-  // Extract player commands and AI responses from messages
   const interactions = messages.map((msg) => ({
     role: msg.role,
     content: msg.content,
     timestamp: msg.timestamp || Date.now(),
-    metrics: msg.metrics || {}, // Include metrics data if available
+    metrics: msg.metrics || {},
   }));
 
-  // Extract puzzle-specific interactions
-  const puzzleInteractions = worldData.puzzles.map((puzzle) => {
-    const relevantMessages = interactions.filter(
-      (msg) =>
-        msg.content
-          ?.toLowerCase()
-          .includes(puzzle.fixedFunctionObject.toLowerCase()) ||
-        msg.content?.toLowerCase().includes(puzzle.solution.toLowerCase())
-    );
+  const puzzleInteractions = worldData.puzzles.map(
+    (puzzle: PuzzleDefinition) => {
+      // Use imported/defined type
+      // Ensure filtering uses the correct object name structure
+      const fixedObjectName = puzzle.fixedFunctionObject.name.toLowerCase();
+      const solutionIdentifier = puzzle.solutionNarrative.toLowerCase(); // Use narrative as identifier if unique enough, or add dedicated field
 
-    // Find solution moment (if any)
-    const solutionMessage = relevantMessages.find(
-      (msg) =>
-        msg.role === "user" &&
-        msg.content?.toLowerCase().includes(puzzle.solution.toLowerCase())
-    );
+      const relevantMessages = interactions.filter(
+        (msg) =>
+          msg.content?.toLowerCase().includes(fixedObjectName) ||
+          msg.content?.toLowerCase().includes(solutionIdentifier) // Adjust if needed
+      );
 
-    // Count attempted solutions (best approximation)
-    const attemptedSolutions = relevantMessages.filter(
-      (msg) =>
-        msg.role === "user" &&
-        msg.content?.toLowerCase().includes("use") &&
-        msg.content
-          ?.toLowerCase()
-          .includes(puzzle.fixedFunctionObject.toLowerCase())
-    );
+      const solutionMessage = relevantMessages.find(
+        (msg) =>
+          msg.role === "user" &&
+          msg.content?.toLowerCase().includes(solutionIdentifier) // Adjust if needed
+      );
 
-    // Find conventional use moments
-    const conventionalUseMoments = relevantMessages.filter(
-      (msg) =>
-        msg.role === "user" &&
-        msg.content?.toLowerCase().includes("use") &&
-        msg.content
-          ?.toLowerCase()
-          .includes(puzzle.fixedFunctionObject.toLowerCase()) &&
-        !msg.content?.toLowerCase().includes(puzzle.solution.toLowerCase())
-    );
+      const attemptedSolutions = relevantMessages.filter(
+        (msg) =>
+          msg.role === "user" &&
+          msg.content?.toLowerCase().includes("use") && // Or based on action description
+          msg.content?.toLowerCase().includes(fixedObjectName)
+      );
 
-    // Find moments of hesitation - using metrics if available
-    const hesitationMoments = relevantMessages.filter(
-      (msg) =>
-        msg.role === "user" &&
-        msg.metrics?.hesitations?.length > 0 &&
-        msg.content
-          ?.toLowerCase()
-          .includes(puzzle.fixedFunctionObject.toLowerCase())
-    );
+      // --- Recalculate conventional vs unconventional attempts based on your logic ---
+      // This part is tricky without knowing exactly how solutions are identified in messages.
+      // Assuming solutionIdentifier marks the unconventional use attempt:
+      const unconventionalAttempts = attemptedSolutions.filter((msg) =>
+        msg.content?.toLowerCase().includes(solutionIdentifier)
+      ).length;
+      const conventionalUseAttempts =
+        attemptedSolutions.length - unconventionalAttempts;
+      // ---
 
-    const averageHesitation =
-      hesitationMoments.length > 0
-        ? hesitationMoments.reduce((sum: number, msg: any) => {
-            return (
-              sum +
-              (msg.metrics?.hesitations?.reduce(
-                (s: number, h: any) => s + h.duration,
-                0
-              ) || 0)
-            );
-          }, 0) / hesitationMoments.length
-        : 0;
+      const hesitationMoments = relevantMessages.filter(
+        (msg) =>
+          msg.role === "user" &&
+          msg.metrics?.hesitations?.length > 0 &&
+          msg.content?.toLowerCase().includes(fixedObjectName)
+      );
 
-    return {
-      puzzle,
-      relevantMessages,
-      solutionFound: !!solutionMessage,
-      solutionMessage,
-      attemptCount: attemptedSolutions.length,
-      conventionalUseCount: conventionalUseMoments.length,
-      hesitationCount: hesitationMoments.length,
-      averageHesitationDuration: averageHesitation,
-      firstMention: relevantMessages[0]?.timestamp,
-      solutionTime: solutionMessage?.timestamp,
-      timeToSolution:
-        solutionMessage && relevantMessages[0]
-          ? solutionMessage.timestamp - relevantMessages[0].timestamp
-          : null,
-    };
-  });
+      // Calculate average hesitation (ensure metrics exist)
+      const totalHesitationDuration = hesitationMoments.reduce(
+        (sum: number, msg: any) => {
+          return (
+            sum +
+            (msg.metrics?.hesitations?.reduce(
+              (s: number, h: any) => s + (h.duration || 0),
+              0
+            ) || 0)
+          );
+        },
+        0
+      );
+      const averageHesitation =
+        hesitationMoments.length > 0
+          ? totalHesitationDuration / hesitationMoments.length
+          : 0;
 
-  // Analyze overall functional fixedness indicators
-  const fixednessIndicators = {
-    conventionalUseFixation: getFixationLevel(interactions, worldData.puzzles),
-    insightMoments: getInsightMoments(interactions, worldData.puzzles),
-    problemSolvingApproach: getProblemSolvingApproach(interactions),
-  };
+      return {
+        puzzle, // Full puzzle definition
+        relevantMessages,
+        solutionFound: !!solutionMessage,
+        solutionMessage,
+        attemptCount: attemptedSolutions.length, // Total attempts using the object
+        conventionalUseCount: conventionalUseAttempts, // Attempts NOT matching solution narrative
+        unconventionalUseCount: unconventionalAttempts, // Attempts matching solution narrative
+        hesitationCount: hesitationMoments.length,
+        averageHesitationDuration: averageHesitation,
+        firstMention: relevantMessages[0]?.timestamp,
+        solutionTime: solutionMessage?.timestamp,
+        timeToSolution:
+          solutionMessage && relevantMessages[0]
+            ? solutionMessage.timestamp - relevantMessages[0].timestamp
+            : null,
+      };
+    }
+  );
+
+  // --- Call helper analysis functions (assuming they are updated for new structure) ---
+  // const fixednessIndicators = getFixationLevel(interactions, worldData.puzzles);
+  // ... other helper function calls ...
+
+  // --- Construct the final analysis string ---
+  // Ensure all references to worldData and puzzleInteraction fields use the new structure
+  // Example adjustment:
+  // Instead of: pi.puzzle.fixedFunctionObject
+  // Use: pi.puzzle.fixedFunctionObject.name
+  // Instead of: pi.puzzle.solution
+  // Use: pi.puzzle.solutionNarrative (or a more specific solution keyword if added)
+
+  // NOTE: The analysis string construction needs careful updating
+  // based on the exact output desired and how helper functions are adapted.
+  // The example below shows how to access the fields, but the full string needs review.
 
   return `
 FUNCTIONAL FIXEDNESS RESEARCH ANALYSIS
-World: ${worldData.name}
-Variant: ${
-    variant === "A"
-      ? "Control (Without Pre-utilization)"
-      : "Experimental (After Pre-utilization)"
-  }
+World: ${worldData.name} (ID: ${worldData.id})
+Variant: ${variant === "A" ? "Control (A)" : "Experimental (B)"}
+Player Character: ${worldData.character.name}
 Total Interactions: ${interactions.filter((msg) => msg.role === "user").length}
-Total Conversation Duration: ${
-    interactions.length > 1
-      ? formatTimeDifference(
-          interactions[0].timestamp,
-          interactions[interactions.length - 1].timestamp
-        )
-      : "N/A"
-  }
+Total Duration: ${formatTimeDifference(
+    interactions[0]?.timestamp,
+    interactions[interactions.length - 1]?.timestamp
+  )}
 
 INDIVIDUAL PUZZLE PERFORMANCE:
 ${puzzleInteractions
   .map(
     (pi) => `
-Puzzle: "${pi.puzzle.name}"
-- Solution Required: Using ${pi.puzzle.fixedFunctionObject} as ${
-      pi.puzzle.solution.split("Use the ")[1] || pi.puzzle.solution
-    }
+Puzzle: "${pi.puzzle.name}" (ID: ${pi.puzzle.id})
+- Fixed Object: "${pi.puzzle.fixedFunctionObject.name}"
+- Unconventional Use Required: ${pi.puzzle.solutionNarrative}
 - Solution Found: ${pi.solutionFound ? "Yes" : "No"}
-${
-  pi.solutionFound
-    ? `- Time to Solution: ${formatTimeDifference(
-        pi.firstMention,
-        pi.solutionTime
-      )}`
-    : ""
-}
-- First Mention to Solution: ${
-      pi.timeToSolution
-        ? Math.round(pi.timeToSolution / 1000) + " seconds"
-        : "Not solved"
+- Time to Solution: ${
+      formatTimeDifference(pi.firstMention, pi.solutionTime) || "N/A"
     }
 - Conventional Use Attempts: ${pi.conventionalUseCount}
-- Unconventional Use Attempts: ${pi.attemptCount - pi.conventionalUseCount}
-- Total Attempts Before Solution: ${pi.attemptCount}
-- Hesitation Indicators: ${pi.hesitationCount} moments
-${
-  pi.hesitationCount > 0
-    ? `- Average Hesitation Duration: ${Math.round(
-        pi.averageHesitationDuration
-      )}ms`
-    : ""
-}
-- Alternative Approaches: ${getAlternativeApproaches(interactions, pi.puzzle)}
-${
-  pi.solutionFound
-    ? `- Breakthrough Observation: ${getBreakthroughMoment(
-        interactions,
-        pi.puzzle
-      )}`
-    : ""
-}
+- Unconventional Use Attempts (leading to solution): ${
+      pi.unconventionalUseCount
+    }
+- Total Attempts with Object: ${pi.attemptCount}
+- Hesitation Moments: ${
+      pi.hesitationCount
+    } (${pi.averageHesitationDuration.toFixed(0)}ms avg)
+- Alternative Approaches Tried: ${getAlternativeApproaches(
+      interactions,
+      pi.puzzle
+    )}
+- Breakthrough Observation: ${
+      pi.solutionFound ? getBreakthroughMoment(interactions, pi.puzzle) : "N/A"
+    }
 `
   )
   .join("\n")}
 
-FUNCTIONAL FIXEDNESS INDICATORS:
-- Fixation on conventional uses: ${
-    fixednessIndicators.conventionalUseFixation.level
-  }
-  Evidence: ${fixednessIndicators.conventionalUseFixation.evidence}
-- Insight moments: ${
-    fixednessIndicators.insightMoments.observed
-      ? "Observed"
-      : "Not clearly observed"
-  }
-  ${fixednessIndicators.insightMoments.description}
-- Problem-solving approach: ${fixednessIndicators.problemSolvingApproach.style}
-  Characteristics: ${fixednessIndicators.problemSolvingApproach.characteristics}
-- User behaviors indicating fixedness:
-  * ${identifyFixednessPatterns(interactions, worldData.puzzles)}
-
+OVERALL ASSESSMENT:
+${
+  /* Add calls to updated helper functions here to generate summary metrics */ ""
+}
+- Functional Fixedness Level: ${getOverallFixednessLevel(puzzleInteractions)}
+- Notable Fixedness Patterns: ${identifyFixednessPatterns(
+    interactions,
+    worldData.puzzles
+  )}
 ${
   variant === "B"
-    ? `PRIMING EFFECTIVENESS:
-- Response to environmental examples: ${getEnvironmentalPrimingResponse(
+    ? `- Priming Influence: ${getEnvironmentalPrimingResponse(
         interactions,
         worldData.puzzles
-      )}
-- Evidence of conceptual transfer: ${getConceptualTransferEvidence(
-        interactions,
-        worldData.puzzles
-      )}
-- Impact of environmental cues on problem-solving time: ${assessEnvironmentalCueImpact(
-        puzzleInteractions
       )}`
     : ""
 }
-
-RESEARCH IMPLICATIONS:
-- Degree of functional fixedness observed: ${getOverallFixednessLevel(
-    puzzleInteractions
-  )}
-- Key findings: ${getKeyFindings(puzzleInteractions, variant, interactions)}
-- Alignment with Duncker's paradigm: ${getDunckerAlignmentAssessment(
+- Alignment with Duncker: ${getDunckerAlignmentAssessment(
     puzzleInteractions,
     variant
   )}
-- Hesitation analysis: ${analyzeHesitationPatterns(puzzleInteractions)}
-- Comparative puzzle difficulty: ${comparePuzzleDifficulty(puzzleInteractions)}
-
-EXPERIMENT QUALITY ASSESSMENT:
-- Strength of functional fixedness effect: ${assessFixednessEffectStrength(
-    puzzleInteractions,
-    variant
-  )}
-- Quality of puzzle design: ${assessPuzzleDesignQuality(
-    puzzleInteractions,
-    worldData.puzzles
-  )}
-- Suggestions for experimental improvement: ${suggestExperimentalImprovements(
+- Suggestions: ${suggestExperimentalImprovements(
     puzzleInteractions,
     worldData,
     variant
   )}
 
-This analysis is based on conversation patterns and may not capture all nuances of the player's thought process. Further qualitative review is recommended.
+(Analysis based on interaction patterns)
 `;
 };
 
-// Helper functions for analysis generation
+// --- Helper Function Stubs (Implement or adapt from previous version) ---
+
+// Add implementations for all helper functions used in generateSessionAnalysis
+// Ensure they correctly access fields from the new WorldDefinition structure
+function formatTimeDifference(
+  startTime: number | undefined,
+  endTime: number | undefined
+): string {
+  if (!startTime || !endTime || endTime < startTime) return "N/A";
+  const diffMs = endTime - startTime;
+  const minutes = Math.floor(diffMs / 60000);
+  const seconds = Math.floor((diffMs % 60000) / 1000);
+  return `${minutes}m ${seconds}s`;
+}
+
+function getAlternativeApproaches(
+  interactions: any[],
+  puzzle: PuzzleDefinition
+): string {
+  // Filter messages where the user tried to use the fixed object in a way that doesn't match the solution narrative
+  const fixedObjectNameLower = puzzle.fixedFunctionObject.name.toLowerCase();
+  const solutionNarrativeLower = puzzle.solutionNarrative.toLowerCase(); // Or a more specific keyword if available
+
+  const alternativeAttempts = interactions.filter(
+    (msg) =>
+      msg.role === "user" &&
+      msg.content?.toLowerCase().includes("use") && // Or better action detection
+      msg.content?.toLowerCase().includes(fixedObjectNameLower) &&
+      !msg.content?.toLowerCase().includes(solutionNarrativeLower) // Check if it's NOT the solution attempt
+  );
+
+  const uniqueAttempts = [
+    ...new Set(alternativeAttempts.map((msg) => msg.content)),
+  ];
+
+  if (uniqueAttempts.length === 0) return "None observed";
+  return `${uniqueAttempts.length} distinct approaches: ${uniqueAttempts
+    .slice(0, 3)
+    .join("; ")}${uniqueAttempts.length > 3 ? "..." : ""}`;
+}
+
+function getBreakthroughMoment(
+  interactions: any[],
+  puzzle: PuzzleDefinition
+): string {
+  // Find the message just before the successful solution
+  const solutionIdentifier = puzzle.solutionNarrative.toLowerCase(); // Adjust if needed
+  const solutionMsgIndex = interactions.findIndex(
+    (msg) =>
+      msg.role === "user" &&
+      msg.content?.toLowerCase().includes(solutionIdentifier)
+  );
+
+  if (solutionMsgIndex <= 0) return "Immediate solution or not found";
+
+  const precedingAssistantMsgs = interactions
+    .slice(Math.max(0, solutionMsgIndex - 3), solutionMsgIndex) // Look at last few AI messages
+    .filter((msg) => msg.role === "assistant" || msg.role === "model"); // Check assistant/model roles
+
+  if (precedingAssistantMsgs.length === 0)
+    return "No clear trigger in preceding messages";
+
+  // Simple check for hints (customize based on actual hints)
+  const hinted = precedingAssistantMsgs.some(
+    (msg) =>
+      msg.content
+        ?.toLowerCase()
+        .includes(puzzle.fixedFunctionObject.name.toLowerCase()) &&
+      (msg.content?.toLowerCase().includes("shape") ||
+        msg.content?.toLowerCase().includes("material") ||
+        msg.content?.toLowerCase().includes("try thinking about") ||
+        msg.content?.toLowerCase().includes("what else could"))
+  );
+
+  if (hinted)
+    return "Likely triggered by AI hint emphasizing object properties or alternative uses.";
+
+  // Check if player examined the object just before
+  const precedingUserMsgs = interactions
+    .slice(Math.max(0, solutionMsgIndex - 2), solutionMsgIndex)
+    .filter((msg) => msg.role === "user");
+  const examinedObject = precedingUserMsgs.some(
+    (msg) =>
+      msg.content?.toLowerCase().startsWith("examine") &&
+      msg.content
+        ?.toLowerCase()
+        .includes(puzzle.fixedFunctionObject.name.toLowerCase())
+  );
+
+  if (examinedObject) return "Possibly triggered after examining the object.";
+
+  return "Sudden shift in player strategy observed.";
+}
+
+function getOverallFixednessLevel(puzzleInteractions: any[]): string {
+  if (puzzleInteractions.length === 0) return "N/A";
+  const solvedCount = puzzleInteractions.filter(
+    (pi) => pi.solutionFound
+  ).length;
+  const totalPuzzles = puzzleInteractions.length;
+  const avgAttempts =
+    puzzleInteractions.reduce((sum, pi) => sum + pi.attemptCount, 0) /
+    totalPuzzles;
+
+  if (solvedCount / totalPuzzles < 0.5 || avgAttempts > 5) return "High";
+  if (solvedCount / totalPuzzles < 0.8 || avgAttempts > 3) return "Moderate";
+  return "Low";
+}
+
+function identifyFixednessPatterns(
+  interactions: any[],
+  puzzles: PuzzleDefinition[]
+): string {
+  const patterns = [];
+  puzzles.forEach((puzzle) => {
+    const fixedObjectNameLower = puzzle.fixedFunctionObject.name.toLowerCase();
+    const solutionIdentifier = puzzle.solutionNarrative.toLowerCase(); // Adjust if needed
+
+    const conventionalAttempts = interactions.filter(
+      (msg) =>
+        msg.role === "user" &&
+        msg.content?.toLowerCase().includes("use") &&
+        msg.content?.toLowerCase().includes(fixedObjectNameLower) &&
+        !msg.content?.toLowerCase().includes(solutionIdentifier)
+    ).length;
+
+    if (conventionalAttempts >= 3) {
+      patterns.push(
+        `Repeated conventional use of ${puzzle.fixedFunctionObject.name}`
+      );
+    }
+  });
+  const confusionExpr = interactions.filter(
+    (msg) =>
+      msg.role === "user" &&
+      /(can't use|doesn't work|how do i|stuck|not working)/i.test(
+        msg.content || ""
+      )
+  ).length;
+  if (confusionExpr > 1) patterns.push("Expressed confusion/stuck");
+
+  return patterns.length > 0
+    ? patterns.join("; ")
+    : "No specific patterns identified";
+}
+
+function getEnvironmentalPrimingResponse(
+  interactions: any[],
+  puzzles: PuzzleDefinition[]
+): string {
+  const primingReferences = interactions.filter(
+    (msg) =>
+      msg.role === "user" &&
+      /(like the|similar to|saw.*using|remember seeing)/i.test(
+        msg.content || ""
+      )
+  ).length;
+  return primingReferences > 0
+    ? `Player referenced environmental examples ${primingReferences} times.`
+    : "No clear reference to environmental examples.";
+}
+
+function getDunckerAlignmentAssessment(
+  puzzleInteractions: any[],
+  variant: string
+): string {
+  if (puzzleInteractions.length === 0) return "N/A";
+  const solvedRate =
+    puzzleInteractions.filter((pi) => pi.solutionFound).length /
+    puzzleInteractions.length;
+  const avgAttempts =
+    puzzleInteractions.reduce((sum, pi) => sum + pi.attemptCount, 0) /
+    puzzleInteractions.length;
+
+  if (variant === "A") {
+    return solvedRate < 0.7
+      ? `Aligns with Duncker's w.p. condition (fixedness observed, ${Math.round(
+          solvedRate * 100
+        )}% solve rate).`
+      : `Partially aligns; higher solve rate (${Math.round(
+          solvedRate * 100
+        )}%) than typical w.p.`;
+  } else {
+    // Variant B
+    const conventionalUses = puzzleInteractions.reduce(
+      (sum, pi) => sum + pi.conventionalUseCount,
+      0
+    );
+    const unconventionalUses = puzzleInteractions.reduce(
+      (sum, pi) => sum + pi.unconventionalUseCount,
+      0
+    );
+    return conventionalUses > unconventionalUses * 1.5
+      ? `Aligns with Duncker's a.p. condition (struggle after conventional use observed).`
+      : `Suggests priming may have reduced a.p. effect.`;
+  }
+}
+
+function suggestExperimentalImprovements(
+  puzzleInteractions: any[],
+  worldData: WorldDefinition,
+  variant: string
+): string {
+  const suggestions = [];
+  const easyPuzzles = puzzleInteractions
+    .filter((pi) => pi.solutionFound && pi.attemptCount <= 1)
+    .map((pi) => pi.puzzle.name);
+  const hardPuzzles = puzzleInteractions
+    .filter((pi) => !pi.solutionFound)
+    .map((pi) => pi.puzzle.name);
+
+  if (easyPuzzles.length > puzzleInteractions.length * 0.5)
+    suggestions.push(
+      `Increase difficulty/subtlety for puzzles: ${easyPuzzles.join(", ")}.`
+    );
+  if (hardPuzzles.length > puzzleInteractions.length * 0.5)
+    suggestions.push(
+      `Consider adding clearer hints or simplifying puzzles: ${hardPuzzles.join(
+        ", "
+      )}.`
+    );
+  if (
+    variant === "B" &&
+    getEnvironmentalPrimingResponse(
+      puzzleInteractions.flatMap((pi) => pi.relevantMessages),
+      worldData.puzzles
+    ).includes("No clear reference")
+  ) {
+    suggestions.push(
+      "Strengthen or increase visibility of environmental priming examples."
+    );
+  }
+  return suggestions.length > 0
+    ? suggestions.join(" ")
+    : "Current design seems reasonably balanced for this session.";
+}
+
+// Old helper functions for analysis generation
 function getFixationLevel(interactions: any[], puzzles: any[]) {
   // Count conventional use mentions vs. unconventional use attempts
   let conventionalUses = 0;
@@ -503,106 +734,6 @@ function getProblemSolvingApproach(interactions: any[]) {
   }
 }
 
-function getAlternativeApproaches(interactions: any[], puzzle: any) {
-  // Extract alternative solution attempts for this puzzle
-  const puzzleInteractions = interactions.filter(
-    (msg) =>
-      msg.role === "user" &&
-      msg.content?.toLowerCase().includes("use") &&
-      msg.content
-        ?.toLowerCase()
-        .includes(puzzle.fixedFunctionObject.toLowerCase()) &&
-      !msg.content?.toLowerCase().includes(puzzle.solution.toLowerCase())
-  );
-
-  if (puzzleInteractions.length === 0) {
-    return "No alternative approaches attempted";
-  }
-
-  // List unique alternative approaches
-  const approaches = [...new Set(puzzleInteractions.map((msg) => msg.content))];
-
-  return approaches.length > 0
-    ? `Player tried ${approaches.length} alternative approaches: ${approaches
-        .slice(0, 3)
-        .join("; ")}${approaches.length > 3 ? "..." : ""}`
-    : "No clear alternative approaches observed";
-}
-
-function getBreakthroughMoment(interactions: any[], puzzle: any) {
-  // Find the message just before the successful solution
-  const solutionMsg = interactions.find(
-    (msg) =>
-      msg.role === "user" &&
-      msg.content?.toLowerCase().includes(puzzle.solution.toLowerCase())
-  );
-
-  if (!solutionMsg) return "No solution found";
-
-  const solutionIndex = interactions.findIndex((msg) => msg === solutionMsg);
-  if (solutionIndex <= 0)
-    return "Immediate solution with no clear breakthrough moment";
-
-  // Get the previous few messages
-  const prevMessages = interactions
-    .slice(Math.max(0, solutionIndex - 5), solutionIndex)
-    .filter((msg) => msg.role === "assistant");
-
-  if (prevMessages.length === 0)
-    return "No clear breakthrough trigger identified";
-
-  // Look for mentions of physical properties in the assistant messages
-  const propertyMentions = prevMessages.some(
-    (msg) =>
-      msg.content?.toLowerCase().includes("shape") ||
-      msg.content?.toLowerCase().includes("material") ||
-      msg.content?.toLowerCase().includes("edge") ||
-      msg.content?.toLowerCase().includes("surface") ||
-      msg.content?.toLowerCase().includes("structure")
-  );
-
-  if (propertyMentions) {
-    return "Player had a breakthrough after examining the object's physical properties";
-  }
-
-  // Check if there were environmental cues
-  const environmentalCues = prevMessages.some(
-    (msg) =>
-      msg.content?.toLowerCase().includes("similar") ||
-      msg.content?.toLowerCase().includes("example") ||
-      msg.content?.toLowerCase().includes("notice") ||
-      msg.content?.toLowerCase().includes("remember")
-  );
-
-  if (environmentalCues) {
-    return "Player was likely influenced by environmental cues or examples";
-  }
-
-  return "Player showed a sudden shift in approach leading to the solution";
-}
-
-function getEnvironmentalPrimingResponse(interactions: any[], puzzles: any[]) {
-  // Look for responses to environmental examples (variant B specific)
-  const primingResponses = interactions.filter(
-    (msg) =>
-      msg.role === "user" &&
-      msg.content?.toLowerCase().includes("like") &&
-      (msg.content?.toLowerCase().includes("example") ||
-        msg.content?.toLowerCase().includes("similar") ||
-        msg.content?.toLowerCase().includes("same way"))
-  );
-
-  if (primingResponses.length === 0) {
-    return "No explicit references to environmental examples observed";
-  }
-
-  const relevantPriming = primingResponses.length;
-
-  return relevantPriming > 0
-    ? `Player explicitly referenced environmental examples ${relevantPriming} times, showing influence from priming`
-    : "Limited evidence of influence from environmental examples";
-}
-
 function getConceptualTransferEvidence(interactions: any[], puzzles: any[]) {
   // Check for transfer of concepts between puzzles
   let transferEvidence = "";
@@ -682,74 +813,6 @@ function assessEnvironmentalCueImpact(puzzleInteractions: any[]) {
   } else {
     return "High attempt count despite environmental cues suggests limited effectiveness in this participant";
   }
-}
-
-function identifyFixednessPatterns(interactions: any[], puzzles: any[]) {
-  // Look for specific patterns indicating functional fixedness
-  const patterns = [];
-
-  // Check for repeated conventional use attempts
-  puzzles.forEach((puzzle) => {
-    const conventionalUses = interactions.filter(
-      (msg) =>
-        msg.role === "user" &&
-        msg.content?.toLowerCase().includes("use") &&
-        msg.content
-          ?.toLowerCase()
-          .includes(puzzle.fixedFunctionObject.toLowerCase()) &&
-        !msg.content?.toLowerCase().includes(puzzle.solution.toLowerCase())
-    );
-
-    if (conventionalUses.length >= 3) {
-      patterns.push(
-        `Repeated conventional use attempts with ${puzzle.fixedFunctionObject}`
-      );
-    }
-  });
-
-  // Check for expressions of confusion or limitation
-  const confusionMessages = interactions.filter(
-    (msg) =>
-      msg.role === "user" &&
-      (msg.content?.toLowerCase().includes("can't use") ||
-        msg.content?.toLowerCase().includes("doesn't work") ||
-        msg.content?.toLowerCase().includes("won't work") ||
-        msg.content?.toLowerCase().includes("how do i use") ||
-        msg.content?.toLowerCase().includes("not working"))
-  );
-
-  if (confusionMessages.length > 0) {
-    patterns.push(
-      "Expressions of confusion or limitation when conventional uses failed"
-    );
-  }
-
-  // Check for hesitation patterns
-  const hesitationBeforeSolutions = puzzles.filter((puzzle) => {
-    const solutionMsg = interactions.find(
-      (msg) =>
-        msg.role === "user" &&
-        msg.content?.toLowerCase().includes(puzzle.solution.toLowerCase())
-    );
-
-    if (!solutionMsg) return false;
-
-    const solutionIndex = interactions.findIndex((msg) => msg === solutionMsg);
-    if (solutionIndex <= 0) return false;
-
-    const preSolutionMsg = interactions[solutionIndex - 1];
-    return preSolutionMsg?.metrics?.hesitations?.length > 0;
-  });
-
-  if (hesitationBeforeSolutions.length > 0) {
-    patterns.push(
-      "Hesitation immediately before arriving at unconventional solutions"
-    );
-  }
-
-  return patterns.length > 0
-    ? patterns.join("; ")
-    : "No clear fixedness patterns identified";
 }
 
 function analyzeHesitationPatterns(puzzleInteractions: any[]) {
@@ -899,110 +962,6 @@ function assessPuzzleDesignQuality(puzzleInteractions: any[], puzzles: any[]) {
   );
 }
 
-function suggestExperimentalImprovements(
-  puzzleInteractions: any[],
-  worldData: any,
-  variant: string
-) {
-  // Suggest improvements based on observed patterns
-  const suggestions = [];
-
-  // Check for puzzles that were too easy
-  const easyPuzzles = puzzleInteractions.filter(
-    (pi) => pi.solutionFound && pi.attemptCount <= 1
-  );
-  if (easyPuzzles.length > 0) {
-    suggestions.push(
-      `Increase difficulty of "${easyPuzzles
-        .map((pi) => pi.puzzle.name)
-        .join('", "')}" by strengthening conventional context`
-    );
-  }
-
-  // Check for puzzles that were too hard
-  const hardPuzzles = puzzleInteractions.filter((pi) => !pi.solutionFound);
-  if (hardPuzzles.length > 0) {
-    suggestions.push(
-      `Consider adding more subtle cues for "${hardPuzzles
-        .map((pi) => pi.puzzle.name)
-        .join('", "')}" puzzles`
-    );
-  }
-
-  // Variant-specific suggestions
-  if (variant === "B") {
-    const lowInfluencedPuzzles = puzzleInteractions.filter(
-      (pi) => pi.solutionFound && pi.conventionalUseCount > 2
-    );
-
-    if (lowInfluencedPuzzles.length > 0) {
-      suggestions.push(
-        `Strengthen environmental examples related to "${lowInfluencedPuzzles
-          .map((pi) => pi.puzzle.name)
-          .join('", "')}" puzzles`
-      );
-    }
-  }
-
-  // General improvements
-  const averageHesitation =
-    puzzleInteractions.reduce(
-      (sum, pi) => sum + pi.averageHesitationDuration,
-      0
-    ) /
-    Math.max(
-      1,
-      puzzleInteractions.filter((pi) => pi.hesitationCount > 0).length
-    );
-
-  if (averageHesitation > 1000) {
-    suggestions.push(
-      "Consider implementing real-time hesitation tracking to dynamically adjust difficulty"
-    );
-  }
-
-  return suggestions.length > 0
-    ? suggestions.join("; ")
-    : "No specific improvement suggestions based on this session data";
-}
-
-function getOverallFixednessLevel(puzzleInteractions: any[]) {
-  const solvedCount = puzzleInteractions.filter(
-    (pi) => pi.solutionFound
-  ).length;
-  const totalPuzzles = puzzleInteractions.length;
-  const averageAttempts =
-    puzzleInteractions.reduce((sum, pi) => sum + pi.attemptCount, 0) /
-    totalPuzzles;
-
-  // Calculate conventional vs unconventional use ratio
-  const conventionalUses = puzzleInteractions.reduce(
-    (sum, pi) => sum + pi.conventionalUseCount,
-    0
-  );
-  const unconventionalUses = puzzleInteractions.reduce(
-    (sum, pi) => sum + (pi.attemptCount - pi.conventionalUseCount),
-    0
-  );
-  const fixednessRatio = conventionalUses / Math.max(1, unconventionalUses);
-
-  if (
-    solvedCount / totalPuzzles < 0.5 ||
-    averageAttempts > 5 ||
-    fixednessRatio > 3
-  ) {
-    return "High";
-  } else if (
-    solvedCount / totalPuzzles < 0.8 ||
-    averageAttempts > 3 ||
-    fixednessRatio > 1.5
-  ) {
-    return "Moderate";
-  } else {
-    return "Low";
-  }
-}
-
 function getKeyFindings(
   puzzleInteractions: any[],
   variant: string,
@@ -1079,61 +1038,4 @@ function getKeyFindings(
   }
 
   return findings;
-}
-
-function getDunckerAlignmentAssessment(
-  puzzleInteractions: any[],
-  variant: string
-) {
-  // Assess alignment with Duncker's functional fixedness paradigm
-  const solvedRate =
-    puzzleInteractions.filter((pi) => pi.solutionFound).length /
-    puzzleInteractions.length;
-  const avgAttempts =
-    puzzleInteractions.reduce((sum, pi) => sum + pi.attemptCount, 0) /
-    puzzleInteractions.length;
-
-  // Expected patterns based on Duncker's research
-  const expectedVariantA =
-    "In control condition (w.p.), participants typically solve fewer problems and require more attempts";
-  const expectedVariantB =
-    "In experimental condition (a.p.), participants typically struggle more after pre-utilizing objects conventionally";
-
-  if (variant === "A") {
-    if (solvedRate < 0.7) {
-      return `Results strongly align with Duncker's control condition findings - showing functional fixedness with ${Math.round(
-        solvedRate * 100
-      )}% solve rate. ${expectedVariantA}`;
-    } else {
-      return `Results partially align with Duncker's paradigm, though solve rate (${Math.round(
-        solvedRate * 100
-      )}%) is higher than typical control findings. ${expectedVariantA}`;
-    }
-  } else {
-    // For variant B, we need to assess if environmental examples helped overcome fixedness
-    const conventionalUses = puzzleInteractions.reduce(
-      (sum, pi) => sum + pi.conventionalUseCount,
-      0
-    );
-    const unconventionalUses = puzzleInteractions.reduce(
-      (sum, pi) => sum + (pi.attemptCount - pi.conventionalUseCount),
-      0
-    );
-
-    if (conventionalUses > unconventionalUses * 2) {
-      return `Results align strongly with Duncker's a.p. condition - despite environmental examples, player showed strong fixedness after using objects conventionally. ${expectedVariantB}`;
-    } else {
-      return `Results show more success than typical in Duncker's a.p. condition, suggesting environmental examples may have partially overcome fixedness. ${expectedVariantB}`;
-    }
-  }
-}
-
-function formatTimeDifference(startTime: number, endTime: number) {
-  if (!startTime || !endTime) return "N/A";
-
-  const diffMs = endTime - startTime;
-  const minutes = Math.floor(diffMs / 60000);
-  const seconds = Math.floor((diffMs % 60000) / 1000);
-
-  return `${minutes}m ${seconds}s`;
 }

@@ -10,7 +10,14 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { getDatabase } from "@/lib/mongodb";
-import { recordInteraction, recordSessionSummary } from "@/models/Interaction";
+// Import InteractionData type along with the functions
+import {
+  recordInteraction,
+  recordSessionSummary,
+  SessionSummaryData,
+  InteractionData,
+} from "@/models/Interaction";
+import { ObjectId } from "mongodb"; // Ensure ObjectId is imported if needed
 
 /**
  * Handles POST requests to store user interactions and session summaries for research analytics.
@@ -19,120 +26,230 @@ import { recordInteraction, recordSessionSummary } from "@/models/Interaction";
  */
 export async function POST(request: NextRequest) {
   try {
-    // Parse request body - now could be a single interaction or an array
+    // Parse request body - could be { interactions: [...], sessionSummary: {...} } or a single interaction
     const data = await request.json();
 
     // Get MongoDB connection
     const db = await getDatabase();
 
-    // Check if it's a batch of interactions or a single one
+    // Check if it's a batch upload structure
     if (data.interactions && Array.isArray(data.interactions)) {
-      // Handle bulk upload from localStorage
-      const interactions = data.interactions;
-      const sessionSummary = data.sessionSummary;
+      // Handle bulk upload from localStorage/client
+      const interactions: Partial<InteractionData>[] = data.interactions; // Use Partial initially if structure might vary slightly
+      const sessionSummaryInput = data.sessionSummary; // The raw summary data from client
 
-      // Process session summary first if available
-      let sessionId = null;
-      if (sessionSummary) {
+      // Process session summary first if provided
+      let sessionId: ObjectId | null = null; // Initialize sessionId as potentially null
+      if (sessionSummaryInput) {
         try {
-          // Store the session summary
-          sessionId = await recordSessionSummary(db, {
-            deviceId: sessionSummary.deviceId,
-            worldId: sessionSummary.worldId,
-            variant: sessionSummary.variant,
-            startTime: new Date(sessionSummary.startTime),
-            endTime: new Date(sessionSummary.endTime),
+          // Prepare summary data for insertion, ensuring correct types and structure
+          // Use Omit to ensure _id isn't passed if present, aligning with function signature
+          const summaryDataToRecord: Omit<SessionSummaryData, "_id"> = {
+            deviceId: sessionSummaryInput.deviceId,
+            // Ensure sessionId from summary input is treated correctly if present (it shouldn't be for a new summary)
+            sessionId: new ObjectId(sessionSummaryInput.sessionId), // Link summary to the session it summarizes
+            worldId: sessionSummaryInput.worldId,
+            variant: sessionSummaryInput.variant,
+            startTime: new Date(sessionSummaryInput.startTime),
+            endTime: new Date(sessionSummaryInput.endTime),
+            totalDurationMs:
+              sessionSummaryInput.totalDurationMs ||
+              new Date(sessionSummaryInput.endTime).getTime() -
+                new Date(sessionSummaryInput.startTime).getTime(),
             totalInteractions:
-              sessionSummary.totalInteractions || interactions.length,
-            puzzleAttempts: sessionSummary.puzzleAttempts || [],
+              sessionSummaryInput.totalInteractions || interactions.length,
+            // --- FIX for Error 1: Use correct property name ---
+            puzzleAttemptSummaries:
+              sessionSummaryInput.puzzleAttemptSummaries || [], // Changed from puzzleAttempts
+            // --- End FIX ---
             functionalFixednessAnalysis:
-              sessionSummary.functionalFixednessAnalysis || "",
-            completionTimestamp: new Date(),
-          });
+              sessionSummaryInput.functionalFixednessAnalysis || "",
+            functionalFixednessMetrics:
+              sessionSummaryInput.functionalFixednessMetrics || undefined, // Optional field
+            conversationData: sessionSummaryInput.conversationData || undefined, // Optional field
+            completionStatus:
+              sessionSummaryInput.completionStatus || "Completed", // Default or from input
+          };
 
-          console.log(`Recorded session summary with ID: ${sessionId}`);
+          // Store the session summary
+          const summaryId = await recordSessionSummary(db, summaryDataToRecord);
+          // Retrieve the sessionId from the summary data itself for linking interactions
+          sessionId = summaryDataToRecord.sessionId; // Get the linked session ID
+          console.log(
+            `Recorded session summary ${summaryId} linked to session ${sessionId}`
+          );
         } catch (err) {
           console.error("Error recording session summary:", err);
+          // Decide if interactions should still be recorded if summary fails
+          // sessionId remains null here
         }
+      } else {
+        // If no summary, try to infer sessionId from the first interaction if consistent
+        if (interactions.length > 0 && interactions[0].sessionId) {
+          // Ensure it's treated as ObjectId | null type safety
+          try {
+            sessionId = new ObjectId(interactions[0].sessionId);
+          } catch (e) {
+            console.warn(
+              "Invalid sessionId found in first interaction, interactions may not be linked correctly."
+            );
+            sessionId = null;
+          }
+        }
+        console.log("No session summary provided for batch upload.");
       }
 
-      // Validate the array
+      // Validate the interactions array
       if (interactions.length === 0) {
-        return NextResponse.json({ success: true });
+        console.log("Received empty interactions array.");
+        return NextResponse.json({
+          success: true,
+          count: 0,
+          sessionRecorded: !!sessionId,
+        });
       }
 
-      // Record each interaction
+      // Record each interaction, linking to the session summary's sessionId if available
+      let recordedCount = 0;
       for (const interaction of interactions) {
+        // Destructure expected fields, provide defaults or handle missing optional fields
         const {
           deviceId,
           command,
-          response, // new field
+          response,
           metrics,
           timestamp,
           worldId,
           variant,
-          puzzleContext, // new field
+          puzzleContext,
+          // Attempt to use the sessionId from the interaction itself if the summary one failed/is missing
+          // But prioritize the session summary's sessionId if present
+          sessionId: interactionSessionId,
         } = interaction;
 
-        // Basic validation
-        if (!deviceId || !command || !metrics || !timestamp) {
-          console.warn("Skipping invalid interaction in batch");
+        // Basic validation for required fields in an interaction
+        if (
+          !deviceId ||
+          !command ||
+          !metrics ||
+          !timestamp ||
+          worldId === undefined ||
+          variant === undefined
+        ) {
+          console.warn(
+            "Skipping invalid interaction in batch due to missing required fields:",
+            interaction
+          );
           continue;
         }
 
         try {
-          await recordInteraction(db, {
+          // --- FIX for Errors 2 & 3: Pass the potentially null sessionId ---
+          // Ensure InteractionData interface allows sessionId: ObjectId | null
+          const interactionToRecord: Omit<InteractionData, "_id"> = {
             deviceId,
-            sessionId, // Now linked to the session summary
+            // Use sessionId from summary processing if available, otherwise try the interaction's own sessionId (if exists), else null
+            sessionId:
+              sessionId ||
+              (interactionSessionId
+                ? new ObjectId(interactionSessionId)
+                : null),
             worldId,
             variant,
             command,
-            response: response || "", // Store AI response as well
+            response: response || undefined, // Ensure response is string or undefined
             timestamp: new Date(timestamp),
             metrics,
-            puzzleContext,
-          });
+            puzzleContext: puzzleContext || {
+              isAttemptedSolution: false,
+              isSolutionSuccess: false,
+            }, // Default if missing
+          };
+          await recordInteraction(db, interactionToRecord);
+          recordedCount++;
+          // --- End FIX ---
         } catch (err) {
           console.error("Error recording batch interaction:", err);
-          // Continue with next interaction
+          // Continue with next interaction? Or stop? Decide based on requirements.
         }
       }
 
+      console.log(`Recorded ${recordedCount} interactions from batch.`);
       return NextResponse.json({
         success: true,
-        count: interactions.length,
-        sessionRecorded: !!sessionId,
+        count: recordedCount,
+        sessionRecorded: !!sessionId, // Indicate if a summary was processed
       });
     } else {
-      // Handle single interaction (legacy support)
-      const { deviceId, command, metrics, timestamp, worldId, variant } = data;
+      // Handle single interaction (legacy or specific use case)
+      console.log("Processing single interaction track request.");
+      const {
+        deviceId,
+        command,
+        metrics,
+        timestamp,
+        worldId,
+        variant,
+        response, // Include optional response
+        puzzleContext, // Include optional context
+        sessionId: singleSessionId, // Allow sessionId to be passed for single tracks too
+      } = data;
 
-      // Validate required fields
-      if (!deviceId || !command || !metrics || !timestamp) {
+      // Validate required fields for a single interaction
+      if (
+        !deviceId ||
+        !command ||
+        !metrics ||
+        !timestamp ||
+        worldId === undefined ||
+        variant === undefined
+      ) {
+        console.error(
+          "Missing required fields for single interaction track:",
+          data
+        );
         return NextResponse.json(
-          { error: "Missing required fields" },
+          { error: "Missing required fields for single interaction" },
           { status: 400 }
         );
       }
 
-      // Record the interaction for analytics purposes
-      await recordInteraction(db, {
-        deviceId,
-        sessionId: null, // Will be populated later
-        worldId,
-        variant,
-        command,
-        response: data.response || "",
-        timestamp: new Date(timestamp),
-        metrics,
-        puzzleContext: data.puzzleContext,
-      });
-
-      return NextResponse.json({ success: true });
+      try {
+        // --- FIX for Errors 2 & 3 (also applied here) ---
+        const interactionToRecord: Omit<InteractionData, "_id"> = {
+          deviceId,
+          // Allow sessionId to be null if not provided or invalid
+          sessionId: singleSessionId ? new ObjectId(singleSessionId) : null,
+          worldId,
+          variant,
+          command,
+          response: response || undefined,
+          timestamp: new Date(timestamp),
+          metrics,
+          puzzleContext: puzzleContext || {
+            isAttemptedSolution: false,
+            isSolutionSuccess: false,
+          },
+        };
+        await recordInteraction(db, interactionToRecord);
+        console.log(`Recorded single interaction for device ${deviceId}`);
+        return NextResponse.json({ success: true });
+        // --- End FIX ---
+      } catch (err) {
+        console.error("Error recording single interaction:", err);
+        // Return error specifically for the single interaction failure
+        return NextResponse.json(
+          { success: false, error: "Failed to record interaction" },
+          { status: 500 }
+        );
+      }
     }
   } catch (error) {
-    console.error("Error tracking analytics:", error);
-    // Still return success to avoid interrupting user experience
-    return NextResponse.json({ success: true });
+    console.error("Error processing /api/analytics/track request:", error);
+    // Generic error response
+    return NextResponse.json(
+      { success: false, error: "Internal server error during tracking" },
+      { status: 500 }
+    );
   }
 }

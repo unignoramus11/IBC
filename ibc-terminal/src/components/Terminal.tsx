@@ -43,6 +43,14 @@ interface Message {
   role: "system" | "user" | "model";
   content: string;
   timestamp: number;
+  segments?: TextSegment[]; // Added for parsed poem segments
+}
+
+// Interface for text segments (shared with ResponseDisplay)
+interface TextSegment {
+  text: string;
+  isPoem: boolean;
+  isEmphasized?: boolean; // New property for emphasized text
 }
 
 // Function to format session time (MM:SS)
@@ -53,6 +61,136 @@ const formatSessionTime = (startTime: number): string => {
   return `${minutes.toString().padStart(2, "0")}:${seconds
     .toString()
     .padStart(2, "0")}`;
+};
+
+/**
+ * Analyzes a string to detect if it contains special formatting like POEM tags and emphasized text
+ * @param text - Current text being typed out
+ * @returns Array of text segments with information about formatting
+ */
+const analyzePartialPoemSegments = (text: string): TextSegment[] => {
+  const segments: TextSegment[] = [];
+
+  // Keep track of tag state
+  let inPoemContent = false;
+  let currentSegmentStart = 0;
+
+  // Handle edge case of empty string
+  if (!text) return [{ text: "", isPoem: false }];
+
+  // Analyze each character
+  for (let i = 0; i < text.length; i++) {
+    // Check for opening tag sequence
+    if (!inPoemContent && text[i] === "<") {
+      // Possible start of opening tag
+      if (i + 4 < text.length && text.substring(i, i + 6) === "<POEM>") {
+        // Found opening tag
+        if (i > currentSegmentStart) {
+          // Add previous non-poem segment
+          segments.push({
+            text: text.substring(currentSegmentStart, i),
+            isPoem: false,
+          });
+        }
+        inPoemContent = true;
+        currentSegmentStart = i + 6; // Start collecting after tag
+        i += 5; // Skip the rest of the tag
+        continue;
+      }
+    }
+
+    // Check for closing tag
+    else if (inPoemContent && text[i] === "<") {
+      // Possible start of closing tag
+      if (i + 6 < text.length && text.substring(i, i + 7) === "</POEM>") {
+        // Found closing tag
+        segments.push({
+          text: text.substring(currentSegmentStart, i),
+          isPoem: true,
+        });
+        inPoemContent = false;
+        currentSegmentStart = i + 7; // Start collecting after tag
+        i += 6; // Skip the rest of the tag
+        continue;
+      }
+    }
+  }
+
+  // Handle any remaining text
+  if (currentSegmentStart < text.length) {
+    segments.push({
+      text: text.substring(currentSegmentStart),
+      isPoem: inPoemContent, // If we were in poem content, this is still poem
+    });
+  }
+
+  // Process segments for emphasized text (between asterisks)
+  const finalSegments: TextSegment[] = [];
+  for (const segment of segments) {
+    if (!segment.isPoem) {
+      // Regex to find emphasized text between asterisks
+      const emphasizedRegex = /(?<!\w)\*([^*]+?)\*(?!\w)/g;
+      let lastIndex = 0;
+      let match;
+      let hasEmphasis = false;
+
+      // Check if there are any emphasized segments
+      if (emphasizedRegex.test(segment.text)) {
+        hasEmphasis = true;
+        // Reset the regex state
+        emphasizedRegex.lastIndex = 0;
+
+        // Process all emphasized segments
+        while ((match = emphasizedRegex.exec(segment.text)) !== null) {
+          // Add regular text before the emphasized part
+          if (match.index > lastIndex) {
+            finalSegments.push({
+              text: segment.text.substring(lastIndex, match.index),
+              isPoem: false,
+              isEmphasized: false,
+            });
+          }
+
+          // Add emphasized text (without the asterisks)
+          finalSegments.push({
+            text: match[1], // Content inside the asterisks
+            isPoem: false,
+            isEmphasized: true,
+          });
+
+          lastIndex = match.index + match[0].length;
+        }
+
+        // Add any remaining text after the last emphasized segment
+        if (lastIndex < segment.text.length) {
+          finalSegments.push({
+            text: segment.text.substring(lastIndex),
+            isPoem: false,
+            isEmphasized: false,
+          });
+        }
+      }
+
+      // If no emphasized text was found, add the segment as is
+      if (!hasEmphasis) {
+        finalSegments.push({
+          text: segment.text,
+          isPoem: false,
+          isEmphasized: false,
+        });
+      }
+    } else {
+      // Preserve poem segments as is
+      finalSegments.push(segment);
+    }
+  }
+
+  // If no segments were created, return original text as non-poem
+  if (finalSegments.length === 0) {
+    return [{ text, isPoem: false, isEmphasized: false }];
+  }
+
+  return finalSegments;
 };
 
 /**
@@ -152,11 +290,11 @@ const Terminal: React.FC<TerminalProps> = ({ deviceId, worldId, variant }) => {
               worldDescriptions.push({
                 id: i,
                 name: world.name,
-                description: world.description,
+                description: world.controlVariantIntro,
               });
               debugLog(`Loaded world data for world ${i}`, {
                 name: world.name,
-                descriptionLength: world.description.length,
+                descriptionLength: world.controlVariantIntro.length,
               });
             } catch (error) {
               debugLog(`Error loading world ${i}:`, error);
@@ -187,6 +325,7 @@ ${worldDescriptions
               role: "system",
               content: selectionPrompt,
               timestamp: Date.now(),
+              segments: [{ text: selectionPrompt, isPoem: false }],
             },
           ]);
         } catch (error) {
@@ -287,6 +426,7 @@ ${worldDescriptions
             role: "model",
             content: "", // Start empty, will animate
             timestamp,
+            segments: [{ text: "", isPoem: false }],
           },
         ]);
 
@@ -327,6 +467,9 @@ ${worldDescriptions
           for (let i = 0; i < initialMessage.length; i++) {
             displayedText += initialMessage[i];
 
+            // Analyze for poem segments in the current partial text
+            const segments = analyzePartialPoemSegments(displayedText);
+
             // Update message
             setMessages((prev) => {
               const newMessages = [...prev];
@@ -335,6 +478,7 @@ ${worldDescriptions
               );
               if (messageIndex !== -1) {
                 newMessages[messageIndex].content = displayedText;
+                newMessages[messageIndex].segments = segments;
               } else {
                 debugLog("Failed to find message for animation update", {
                   timestamp,
@@ -366,6 +510,8 @@ ${worldDescriptions
             );
             if (messageIndex !== -1) {
               newMessages[messageIndex].content = initialMessage;
+              newMessages[messageIndex].segments =
+                analyzePartialPoemSegments(initialMessage);
               debugLog("Set full message content after animation failure");
             } else {
               debugLog(
@@ -428,6 +574,7 @@ ${worldDescriptions
           role: "user",
           content: command,
           timestamp: Date.now(),
+          segments: [{ text: command, isPoem: false }],
         },
       ]);
 
@@ -511,6 +658,7 @@ ${worldDescriptions
           role: "user",
           content: command,
           timestamp: Date.now(),
+          segments: [{ text: command, isPoem: false }],
         },
         {
           role: "system",
@@ -575,6 +723,7 @@ ${worldDescriptions
         role: "user",
         content: command,
         timestamp: Date.now(),
+        segments: [{ text: command, isPoem: false }],
       },
     ]);
 
@@ -659,6 +808,7 @@ ${worldDescriptions
           role: "model",
           content: "", // Start empty, will be updated character by character
           timestamp,
+          segments: [{ text: "", isPoem: false }],
         },
       ]);
 
@@ -671,23 +821,36 @@ ${worldDescriptions
           responseLength: responseText.length,
         });
 
-        // Calculate typing speed - faster for longer texts
+        // Calculate base typing speed - faster for longer texts
         const baseSpeed = 40; // characters per second
         const adjustedSpeed = Math.min(
           Math.max(baseSpeed, responseText.length / 20),
           80
         );
-        const delayBetweenChars = 1000 / adjustedSpeed;
+        const baseDelay = 1000 / adjustedSpeed;
+
+        // Random delay factors to make typing more natural
+        const minDelayFactor = 0.5; // minimum 50% of base delay
+        const maxDelayFactor = 2; // maximum 200% of base delay
+        const getRandomDelay = () =>
+          baseDelay *
+          (minDelayFactor + Math.random() * (maxDelayFactor - minDelayFactor));
+
         debugLog("Animation parameters", {
           baseSpeed,
           adjustedSpeed,
-          delayBetweenChars,
+          baseDelay,
+          minDelayFactor,
+          maxDelayFactor,
         });
 
         let currentText = "";
 
         for (let i = 0; i < responseText.length; i++) {
           currentText += responseText[i];
+
+          // Parse poem segments in real-time as we add each character
+          const segments = analyzePartialPoemSegments(currentText);
 
           // Update the message content with current text
           setMessages((prev) => {
@@ -697,6 +860,7 @@ ${worldDescriptions
             );
             if (messageIndex !== -1) {
               newMessages[messageIndex].content = currentText;
+              newMessages[messageIndex].segments = segments;
             } else {
               debugLog("Failed to find message for animation update", {
                 timestamp,
@@ -711,10 +875,8 @@ ${worldDescriptions
             terminalRef.current.scrollTop = terminalRef.current.scrollHeight;
           }
 
-          // Wait before adding the next character
-          await new Promise((resolve) =>
-            setTimeout(resolve, delayBetweenChars)
-          );
+          // Wait a random amount of time before the next character
+          await new Promise((resolve) => setTimeout(resolve, getRandomDelay()));
         }
 
         debugLog("Text animation complete");
@@ -735,6 +897,8 @@ ${worldDescriptions
           );
           if (messageIndex !== -1) {
             newMessages[messageIndex].content = responseText;
+            newMessages[messageIndex].segments =
+              analyzePartialPoemSegments(responseText);
             debugLog("Set full response text after animation failure");
           } else {
             debugLog("Failed to find message after animation failure");

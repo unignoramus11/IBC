@@ -1,57 +1,152 @@
 /*
- * globals.css
- * -----------
- * Global stylesheet for the IBC Terminal research platform.
- * Sets up terminal-inspired color variables, font, and base UI theming for a consistent research experience.
- * Includes custom scrollbar and selection styling for improved usability and aesthetics in research sessions.
+ * Global Stylesheet: globals.css
+ * ==============================
+ * Defines the base visual theme and layout properties for the IBC Terminal application.
+ * Utilizes Tailwind CSS directives and custom CSS variables for a consistent,
+ * terminal-inspired aesthetic. Includes global styles for body, selections,
+ * scrollbars, and custom animations.
  */
 
+/* Import Tailwind CSS base, components, and utilities */
 @import "tailwindcss";
 
+/* Define root-level CSS variables for theming */
 :root {
+  /* Base background color for the application */
   --background: #0a0a0a;
+  /* Base foreground (text) color */
   --foreground: #ededed;
+  /* Primary terminal text color (green) */
   --terminal-green: #00ff00;
+  /* Secondary terminal color (blue) */
   --terminal-blue: #0066ff;
+  /* Terminal color for errors or alerts (red) */
   --terminal-red: #ff3e3e;
+  /* Terminal color for warnings or highlights (yellow) */
   --terminal-yellow: #ffcc00;
+  /* Terminal color for special elements (cyan) */
+  --terminal-cyan: #00cccc;
+  /* Background color for the status bar component */
   --status-bar-bg: #0f0f0f;
-}
-
-@theme inline {
+  /* Alias for the main background color */
   --color-background: var(--background);
+  /* Alias for the main foreground color */
   --color-foreground: var(--foreground);
+  /* Define the monospace font stack */
   --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
     "Liberation Mono", "Courier New", monospace;
 }
 
+/* Apply base styles to the body element */
 body {
+  /* Set the background color using the defined variable */
   background: var(--background);
+  /* Set the default text color using the defined variable */
   color: var(--foreground);
+  /* Set the default font family using the defined variable */
   font-family: var(--font-mono);
+  /* Ensure the body takes at least the full viewport height */
   min-height: 100vh;
+  /* Remove default body margin */
   margin: 0;
+  /* Remove default body padding */
   padding: 0;
+  /* Prevent horizontal scrolling on the body */
   overflow-x: hidden;
 }
 
+/* Style text selection highlight */
 ::selection {
+  /* Use a semi-transparent terminal green for selection background */
   background: rgba(0, 255, 0, 0.3);
 }
 
+/* Style the scrollbar track for Webkit browsers */
 ::-webkit-scrollbar {
+  /* Set the width of the scrollbar */
   width: 8px;
 }
 
+/* Style the scrollbar track (the area the thumb moves along) */
 ::-webkit-scrollbar-track {
+  /* Use a semi-transparent black background */
   background: rgba(0, 0, 0, 0.5);
 }
 
+/* Style the scrollbar thumb (the draggable part) */
 ::-webkit-scrollbar-thumb {
+  /* Use a semi-transparent terminal green background */
   background: rgba(0, 255, 0, 0.5);
+  /* Round the corners of the thumb */
   border-radius: 4px;
 }
 
+/* Style the scrollbar thumb on hover */
 ::-webkit-scrollbar-thumb:hover {
+  /* Increase the opacity of the terminal green background on hover */
   background: rgba(0, 255, 0, 0.7);
+}
+
+/* Define custom keyframe animation: pulse-subtle */
+@keyframes pulse-subtle {
+  /* Start state */
+  0% {
+    opacity: 0.8;
+  }
+  /* Mid state */
+  50% {
+    opacity: 1;
+    /* Add a subtle text shadow using terminal cyan */
+    text-shadow: 0 0 1px var(--terminal-cyan), 0 0 15px rgba(0, 204, 204, 0.5);
+  }
+  /* End state */
+  100% {
+    opacity: 0.8;
+  }
+}
+
+/* Utility class to apply the pulse-subtle animation */
+.animate-pulse-subtle {
+  /* Apply the animation with specified duration, timing function, and iteration */
+  animation: pulse-subtle 3s ease-in-out infinite;
+  /* Set the origin for transformations */
+  transform-origin: center;
+  /* Add slight letter spacing */
+  letter-spacing: 0.03em;
+}
+
+/* Define custom keyframe animation: glow-subtle */
+@keyframes glow-subtle {
+  /* Start state */
+  0% {
+    /* Apply a subtle yellow text shadow */
+    text-shadow: 0 0 4px rgba(255, 204, 0, 0.3);
+  }
+  /* Mid state */
+  50% {
+    /* Apply a more prominent green and green text shadow */
+    text-shadow: 0 0 0px var(--terminal-green), 0 0 15px rgba(0, 255, 0, 0.7);
+    /* Slightly scale up the element */
+    transform: scale(1.02);
+  }
+  /* End state */
+  100% {
+    /* Return to the subtle yellow text shadow */
+    text-shadow: 0 0 4px rgba(255, 204, 0, 0.3);
+  }
+}
+
+/* Utility class to apply the glow-subtle animation */
+.animate-glow-subtle {
+  /* Apply the animation with specified duration, timing function, and iteration */
+  animation: glow-subtle 2s ease-in-out infinite;
+  /* Set the origin for transformations */
+  transform-origin: center;
+  /* Add slight horizontal padding */
+  padding: 0 2px;
+}
+
+/* Utility class for applying terminal cyan text color */
+.text-terminal-cyan {
+  color: var(--terminal-cyan);
 }
