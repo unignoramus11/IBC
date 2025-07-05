@@ -92,7 +92,7 @@ The IBC Terminal is built using:
 - **Next.js** (v15.3.1) with React (v19) and TypeScript for the frontend application
 - **Tailwind CSS** (v4) for styling
 - **MongoDB** (via `mongodb` driver v6.16.0) for persistent data storage and retrieval
-- **Google Gemini API** (specifically `gemini-2.5-flash-preview-04-17` via `@google/genai` v0.9.0) for dynamic content generation and natural language processing
+- **Google Gemini API** (specifically `gemini-2.5-flash` via `@google/genai` v0.9.0) for dynamic content generation and natural language processing
 - **Client-side persistence** via localStorage for session management and temporary data storage
 - **Next.js API Routes** for serverless backend functionality
 - **UUID** (v11.1.0) for generating persistent device identifiers
@@ -124,7 +124,7 @@ The IBC Terminal is built using:
 
 4. **Natural Language Processing** (`gemini.ts`)
 
-   - Integrates with Google's Gemini API (`gemini-2.5-flash-preview-04-17`)
+   - Integrates with Google's Gemini API (`gemini-2.5-flash`)
    - Provides contextually aware responses to user commands via `/api/command`
    - Generates world introductions via `/api/session/initialize`
    - Performs session analysis via `/api/session/analyze`
@@ -317,7 +317,7 @@ The system temporarily stores interactions in localStorage before uploading them
 
 ### Gemini Integration and System Prompts
 
-The application leverages Google's Gemini API (`gemini-2.5-flash-preview-04-17`) with carefully crafted system prompts (`src/config/systemPrompts.ts`) that:
+The application leverages Google's Gemini API (`gemini-2.5-flash`) with carefully crafted system prompts (`src/config/systemPrompts.ts`) that:
 
 1. Establish the narrative framework for each world
 2. Specify the variant-specific instructions (control or experimental)
@@ -413,7 +413,7 @@ The database schema is designed for both immediate experimental insight and long
 - Node.js 18.x or later (Project uses v20+)
 - npm or yarn
 - MongoDB (local instance or MongoDB Atlas connection string)
-- Google API Key with access to Gemini models (specifically `gemini-2.5-flash-preview-04-17`)
+- Google API Key with access to Gemini models (specifically `gemini-2.5-flash`)
 
 ### Configuration
 

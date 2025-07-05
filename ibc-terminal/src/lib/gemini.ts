@@ -261,7 +261,7 @@ export const getGeminiResponse = async (
     }));
 
     // Use the original ai.chats.create pattern
-    const modelName = "gemini-2.5-flash-preview-04-17"; // Or your original model string
+    const modelName = "gemini-2.5-flash";
     debugLog("Configuring chat model with chats.create", {
       model: modelName,
       temperature: 0.7,
@@ -348,7 +348,7 @@ export const getAnalysisFromPrompt = async (
     }));
 
     // Use the original ai.chats.create pattern for analysis
-    const modelName = "gemini-2.5-flash-preview-04-17"; // Or your original model string
+    const modelName = "gemini-2.5-flash";
     debugLog("Configuring analysis model with chats.create", {
       model: modelName,
       temperature: 0.3,
@@ -455,7 +455,7 @@ ${
     const finalSystemInstruction = baseSystemPrompt + introRequirements;
 
     // Use the original ai.chats.create pattern for the introduction
-    const modelName = "gemini-2.5-flash-preview-04-17"; // Or your original model string
+    const modelName = "gemini-2.5-flash";
     debugLog("Configuring intro model with chats.create", {
       model: modelName,
       temperature: 0.75,
